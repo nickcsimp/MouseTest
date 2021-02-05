@@ -1,18 +1,9 @@
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.RenderingHints;
-import java.awt.Stroke;
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import javax.swing.*;
 
-@SuppressWarnings("serial")
-public class DynamicGraph extends JPanel {
+public class SensorGraph extends JPanel {
     private static final int PREF_W = 800;
     private static final int PREF_H = 650;
     private static final int BORDER_GAP = 30;
@@ -21,9 +12,9 @@ public class DynamicGraph extends JPanel {
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
     private static final int Y_HATCH_CNT = 10;
-    private List<Integer> scores;
+    private java.util.List<Integer> scores;
 
-    public DynamicGraph(ArrayList<Integer> list) {
+    public SensorGraph(ArrayList<Integer> list) {
         scores = list;
     }
 
@@ -40,7 +31,7 @@ public class DynamicGraph extends JPanel {
         double xScale = ((double) getWidth() - 2 * BORDER_GAP) / (scores.size() - 1);
         double yScale = ((double) getHeight() - 2 * BORDER_GAP) / (maximum(scores));
 
-        List<Point> graphPoints = new ArrayList<Point>();
+        java.util.List<Point> graphPoints = new ArrayList<Point>();
         for (int i = 0; i < scores.size(); i++) {
             int x1 = (int) (i * xScale + BORDER_GAP);
             int y1 = (int) ((maximum(scores)- scores.get(i)) * yScale + BORDER_GAP);
@@ -106,5 +97,6 @@ public class DynamicGraph extends JPanel {
         }
         return output;
     }
+
 
 }
