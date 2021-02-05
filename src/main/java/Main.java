@@ -30,7 +30,7 @@ public class Main {
         //Initialise list
         ArrayList<Integer> list = new ArrayList<>();
         //Initialise graphPanel with empty list
-        DynamicGraph graphPanel = new DynamicGraph(list, true, 300);
+        DynamicGraph graphPanel = new DynamicGraph(list, true, 100);
         frame.getContentPane().add(graphPanel);
 
 
@@ -49,7 +49,7 @@ public class Main {
                 //Turns new data into integer
                 list.add(Integer.parseInt(Data.get(Data.size()-1)));
                 //Makes the new graoh with the new data
-                DynamicGraph graphNew = new DynamicGraph(list, true, 20);
+                DynamicGraph graphNew = new DynamicGraph(list, true, 100);
                 //Removes old graph
                 frame.remove(graphPanel);
                 //Changes name
