@@ -19,41 +19,79 @@ public class Main {
     private static ArrayList<String> Data = new ArrayList<String>(); //this contains the info from the sensor
 
     public static void main(String[] args) throws InterruptedException, IOException {
+
+        //Create mainFrame
+        JFrame frame = new JFrame("Mousify");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
+
+        //Initialise list
+        ArrayList<Integer> list = new ArrayList<>();
+        //Initialise graphPanel with empty list
+        DynamicGraph graphPanel = new DynamicGraph(list, true, 300);
+        frame.getContentPane().add(graphPanel);
+
+
         arduino(); //makes the connection to the arduino port
 
         // this next part just runs getData every 0.5seconds (specified by the first parameter in Timer)
-        // getData() just reads the data from the port your arduino is connected to
         ActionListener taskPerformer = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                    getData();
+                    getData(); //getData() just reads the data from the port your arduino is connected to
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            System.out.println(Data);
+                //Turns new data into integer
+                list.add(Integer.parseInt(Data.get(Data.size()-1)));
+                //Makes the new graoh with the new data
+                DynamicGraph graphNew = new DynamicGraph(list, true, 20);
+                //Removes old graph
+                frame.remove(graphPanel);
+                //Changes name
+                graphNew = graphPanel;
+                //Adds new graph
+                frame.getContentPane().add(graphPanel);
+                //Repaints the frame to add the new graph
+                frame.revalidate();
+                frame.repaint();
             }
         };
         new Timer(500, taskPerformer).start();
-
-        dynamicGraph();
     }
 
     public static void dynamicGraph() throws InterruptedException {
         ArrayList<Integer> list = new ArrayList<>();
-        list.add(0);
-        DynamicGraph graph = new DynamicGraph(list);
+        list.add(50);
+        DynamicGraph graph = new DynamicGraph(list, true, 20);
         JFrame frame = new JFrame("DynamicGraph");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(graph);
         frame.pack();
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
-        for(int i =0; i<100; i++){
-            Thread.sleep(1000);
-            list.add(i);
-            DynamicGraph graphNew = new DynamicGraph(list);
+        for(int i =1; i<80; i++){
+            Thread.sleep(500);
+            Random rand = new Random();
+            int randint = rand.nextInt(10);
+            list.add(randint+45);
+            DynamicGraph graphNew = new DynamicGraph(list, true, 20);
+            frame.remove(graph);
+            graph = graphNew;
+            frame.getContentPane().add(graph);
+            frame.revalidate();
+            frame.repaint();
+        }
+        for(int i =80; i<1000; i++){
+            Thread.sleep(500);
+            Random rand = new Random();
+            int randint = rand.nextInt(10);
+            list.add(randint+45);
+            DynamicGraph graphNew = new DynamicGraph(list, true ,20);
             frame.remove(graph);
             graph = graphNew;
             frame.getContentPane().add(graph);
@@ -75,7 +113,7 @@ public class Main {
 
     // arduino just makes the connection to the port where the arduino is
     public static void arduino() throws InterruptedException, IOException {
-        sp = SerialPort.getCommPort("/dev/tty.usbmodem14201");
+        sp = SerialPort.getCommPort("/dev/tty.usbmodem14101");
 
         sp.setComPortParameters(9600, 8, 1, 0);
         if (sp.openPort()) {
