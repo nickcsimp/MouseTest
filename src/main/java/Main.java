@@ -2,6 +2,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
@@ -26,19 +27,52 @@ public class Main {
         frame.pack();
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
+        frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+        frame.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        GraphControls controls = new GraphControls();
+        c.gridx = 8;
+        c.gridy = 0;
+        c.gridwidth = 2;
+        c.weightx = 0.2;
+        frame.getContentPane().add(controls, c);
 
         //Initialise list
         ArrayList<Integer> list = new ArrayList<>();
-        //Initialise graphPanel with empty list
-        DynamicGraph graphPanel = new DynamicGraph(list, true, 100);
-        frame.getContentPane().add(graphPanel);
-
+        final DynamicGraph[] graphPanel = {new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers())};
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 8;
+        c.gridheight = 4;
+        c.weightx = 0.8;
+        frame.getContentPane().add(graphPanel[0], c);
+        JButton paint = new JButton("Export");
+        paint.addActionListener(evt->{
+            frame.dispose();
+            ArrayList<Integer> finalList = list;
+            Export exp = new Export(finalList);
+        });
+        c.gridx = 8;
+        c.gridy = 4;
+        c.gridwidth = 2;
+        c.gridheight = 4;
+        c.weightx = 0.2;
+        c.weighty = 0.5;
+        frame.add(paint, c);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 8;
+        c.gridheight = 8;
+        c.weightx = 0.8;
+        c.weighty = 1;
 
         arduino(); //makes the connection to the arduino port
 
         // this next part just runs getData every 0.5seconds (specified by the first parameter in Timer)
         ActionListener taskPerformer = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
+
                 try {
                     getData(); //getData() just reads the data from the port your arduino is connected to
                 } catch (InterruptedException e) {
@@ -48,29 +82,47 @@ public class Main {
                 }
                 //Turns new data into integer
                 list.add(Integer.parseInt(Data.get(Data.size()-1)));
-                //Makes the new graoh with the new data
-                DynamicGraph graphNew = new DynamicGraph(list, true, 100);
+                //Makes the new graph with the new data
+                DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
                 //Removes old graph
-                frame.remove(graphPanel);
+                frame.remove(graphPanel[0]);
                 //Changes name
-                graphNew = graphPanel;
+                graphPanel[0] = graphNew;
                 //Adds new graph
-                frame.getContentPane().add(graphPanel);
+                frame.getContentPane().add(graphPanel[0], c);
                 //Repaints the frame to add the new graph
                 frame.revalidate();
                 frame.repaint();
             }
         };
         new Timer(500, taskPerformer).start();
+        //dynamicGraph();
     }
 
     public static void dynamicGraph() throws InterruptedException {
         ArrayList<Integer> list = new ArrayList<>();
         list.add(50);
-        DynamicGraph graph = new DynamicGraph(list, true, 20);
         JFrame frame = new JFrame("DynamicGraph");
+        frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+        frame.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        GraphControls controls = new GraphControls();
+        c.gridx = 8;
+        c.gridy = 0;
+        c.gridwidth = 2;
+        c.weightx = 0.2;
+        frame.getContentPane().add(controls, c);
+
+        DynamicGraph graph = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 8;
+        c.weightx = 0.8;
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(graph);
+        frame.getContentPane().add(graph, c);
+
+
         frame.pack();
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
@@ -79,10 +131,10 @@ public class Main {
             Random rand = new Random();
             int randint = rand.nextInt(10);
             list.add(randint+45);
-            DynamicGraph graphNew = new DynamicGraph(list, true, 20);
+            DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
             frame.remove(graph);
             graph = graphNew;
-            frame.getContentPane().add(graph);
+            frame.getContentPane().add(graph, c);
             frame.revalidate();
             frame.repaint();
         }
@@ -91,10 +143,10 @@ public class Main {
             Random rand = new Random();
             int randint = rand.nextInt(10);
             list.add(randint+45);
-            DynamicGraph graphNew = new DynamicGraph(list, true ,20);
+            DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
             frame.remove(graph);
             graph = graphNew;
-            frame.getContentPane().add(graph);
+            frame.getContentPane().add(graph, c);
             frame.revalidate();
             frame.repaint();
         }

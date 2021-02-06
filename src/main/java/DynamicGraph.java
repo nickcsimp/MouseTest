@@ -1,11 +1,5 @@
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.RenderingHints;
-import java.awt.Stroke;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -15,14 +9,18 @@ import javax.swing.*;
 public class DynamicGraph extends JPanel {
     private static final int PREF_W = 800;
     private static final int PREF_H = 650;
-    private static final int BORDER_GAP = 40;
+    private static final int BORDER_GAP = 80;
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
-    private int TIME_LIMIT = 300;
+
+    private int TIME_LIMIT;
     private List<Integer> scores;
     private boolean localised;
+    private String title;
+    private String xaxis;
+    private String yaxis;
     private int maximumX;
     private int minimumX;
     private int hatchSizeX;
@@ -37,16 +35,20 @@ public class DynamicGraph extends JPanel {
     int yMax;
     int xMin;
     int xMax;
+    boolean outliers;
 
-    public DynamicGraph(ArrayList<Integer> list, boolean localised, int timeLimit) {
-        scores = list;
+    public DynamicGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, boolean outliers) {
+        scores = data;
         this.localised = localised;
         TIME_LIMIT = timeLimit;
+        this.title = title;
+        this.yaxis=yaxis;
+        this.xaxis=xaxis;
+        this.outliers = outliers;
     }
 
-    //TODO Take arduino input
-    //TODO red if below certain value
-
+    //TODO Red if below certain value for average
+    //TODO think about sampling frequency
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -61,6 +63,7 @@ public class DynamicGraph extends JPanel {
 
         yAxis(g2);
         xAxis(g2);
+        labels(g2);
 
         Stroke oldStroke = g2.getStroke();
         g2.setColor(GRAPH_COLOR);
@@ -90,21 +93,21 @@ public class DynamicGraph extends JPanel {
         return new Dimension(PREF_W, PREF_H);
     }
 
-    public int maximum(List<Integer> list){
+    public int maximum(List<Integer> list, int upper, int lower){
         Integer output = 0;
-        for(Integer i: list){
-            if(i>output){
-                output=i;
+        for(int i=lower; i<=upper; i++) {
+            if (list.get(i) > output) {
+                output = list.get(i);
             }
         }
         return output;
     }
 
-    public int minimum(List<Integer> list){
-        Integer output = maximum(list);
-        for(Integer i: list){
-            if(i<output){
-                output=i;
+    public int minimum(List<Integer> list, int upper, int lower){
+        Integer output = maximum(list, upper, lower);
+        for(int i=lower; i<=upper; i++){
+            if(list.get(i)<output){
+                output=list.get(i);
             }
         }
         return output;
@@ -144,10 +147,10 @@ public class DynamicGraph extends JPanel {
         xScale = xMax-xMin;
         hatchSizeX = xScale/10;
 
-        maximumY= maximum(scores);
+        maximumY= maximum(scores, maximumX, minimumX);
         minimumY = 0;
         if(localised){
-            minimumY= minimum(scores);
+            minimumY= minimum(scores, maximumX, minimumX );
         }
         yMin = (minimumY/10)*10;
         yMax = ((maximumY/10)+1)*10;
@@ -181,6 +184,37 @@ public class DynamicGraph extends JPanel {
             g2.drawString(String.valueOf((hatchSizeX * i)+xMin), x0 - 5, getHeight() - BORDER_GAP + 20);
             g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
         }
+    }
+
+    private void labels(Graphics2D g2){
+        //Transformation that rotates text
+        AffineTransform affineTransform = new AffineTransform();
+        affineTransform.rotate(Math.toRadians(-90), 0, 0);
+        //Make a font for the axis
+        Font axisFont = new Font(null, Font.PLAIN, 20);
+        FontMetrics axisMet = g2.getFontMetrics(axisFont);
+        int xAxisWidth = axisMet.stringWidth(xaxis);
+        int xAxisY = getHeight()-BORDER_GAP/2;
+        int xAxisX = (getWidth()-xAxisWidth)/2;
+        int yAxisWidth = axisMet.stringWidth(yaxis);
+        int yAxisY = (getHeight()+yAxisWidth)/2;
+        int yAxisX = BORDER_GAP/2;
+        //Make a font for the title
+        Font titleFont = new Font(null, Font.PLAIN, 30);
+        FontMetrics titleMet = g2.getFontMetrics(titleFont);
+        int titleWidth = titleMet.stringWidth(title);
+        int titleY = BORDER_GAP/2;
+        int titleX = (getWidth()-titleWidth)/2;
+        //Make a font for the yaxis
+        Font rotatedFont = axisFont.deriveFont(affineTransform);
+
+
+        g2.setFont(titleFont);
+        g2.drawString(title, titleX, titleY);
+        g2.setFont(axisFont);
+        g2.drawString(xaxis, xAxisX, xAxisY);
+        g2.setFont(rotatedFont);
+        g2.drawString(yaxis, yAxisX, yAxisY);
     }
 
 }
