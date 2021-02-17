@@ -165,7 +165,7 @@ public class Main {
 
     // arduino just makes the connection to the port where the arduino is
     public static void arduino() throws InterruptedException, IOException {
-        sp = SerialPort.getCommPort("/dev/tty.usbmodem14101");
+        sp = SerialPort.getCommPort("/dev/tty.usbmodem14301");
 
         sp.setComPortParameters(9600, 8, 1, 0);
         if (sp.openPort()) {
