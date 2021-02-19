@@ -20,7 +20,7 @@ public class Main {
     private static ArrayList<String> Data = new ArrayList<String>(); //this contains the info from the sensor
 
     public static void main(String[] args) throws InterruptedException, IOException {
-
+    /*
         //Create mainFrame
         JFrame frame = new JFrame("Mousify");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -95,8 +95,32 @@ public class Main {
                 frame.repaint();
             }
         };
-        new Timer(500, taskPerformer).start();
+        new Timer(500, taskPerformer).start();*/
         //dynamicGraph();
+        testDashboard();
+    }
+
+    public static JPanel rawInput(JFrame frame, JPanel graph, ArrayList<Integer> list, boolean local, int time, int[] out) throws InterruptedException {
+        //Use graphPanel = rawInput(frame, graphPanel, list, controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 8;
+        c.gridheight = 8;
+        c.weightx = 0.8;
+        c.weighty = 1;
+        //Makes the new graph with the new data
+        DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", local, time, out);
+        //Removes old graph
+        frame.remove(graph);
+        //Changes name
+        graph = graphNew;
+        //Adds new graph
+        frame.getContentPane().add(graph, c);
+        //Repaints the frame to add the new graph
+        frame.revalidate();
+        frame.repaint();
+        return graph;
     }
 
     public static void dynamicGraph() throws InterruptedException {
@@ -108,17 +132,21 @@ public class Main {
         GridBagConstraints c = new GridBagConstraints();
 
         GraphControls controls = new GraphControls();
-        c.gridx = 8;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        c.weightx = 0.2;
+        c.gridx = 0;
+        c.gridy = 7;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.1;
         frame.getContentPane().add(controls, c);
 
         DynamicGraph graph = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
         c.gridx = 0;
         c.gridy = 0;
-        c.gridwidth = 8;
-        c.weightx = 0.8;
+        c.gridwidth = 1;
+        c.gridheight = 7;
+        c.weightx = 1;
+        c.weighty = 0.7;
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(graph, c);
 
@@ -138,30 +166,136 @@ public class Main {
             frame.revalidate();
             frame.repaint();
         }
-        for(int i =80; i<1000; i++){
+    }
+
+    public static void testDashboard() throws InterruptedException {
+        ArrayList<Integer> list = new ArrayList<>();
+        ArrayList<Integer> avgList = new ArrayList<>();
+        ArrayList<Integer> totavgList = new ArrayList<>();
+        list.add(50);
+        avgList.add(movingAverage(list));
+        totavgList.add(average(list));
+        JFrame frame = new JFrame("Dashboard");
+        frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+        frame.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        GridBagConstraints raw = new GridBagConstraints();
+        GridBagConstraints avg = new GridBagConstraints();
+        GridBagConstraints totavg = new GridBagConstraints();
+
+        GraphControls rawControls = new GraphControls();
+        c.gridx = 0;
+        c.gridy = 7;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.weightx = 1;
+        c.weighty = 0.1;
+        c.fill=GridBagConstraints.HORIZONTAL;
+        frame.getContentPane().add(rawControls, c);
+
+        DynamicGraph rawGraph = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
+        raw.gridx = 0;
+        raw.gridy = 0;
+        raw.gridwidth = 1;
+        raw.gridheight = 7;
+        raw.weightx = 1;
+        raw.weighty = 0.7;
+        raw.anchor=GridBagConstraints.NORTHWEST;
+        raw.fill=GridBagConstraints.HORIZONTAL;
+        frame.getContentPane().add(rawGraph, raw);
+
+        GraphControls avgControls = new GraphControls();
+        c.gridx = 1;
+        c.gridy = 7;
+        frame.getContentPane().add(avgControls, c);
+
+        DynamicGraph avgGraph = new DynamicGraph(avgList, "Moving Average", "Piezo Output", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
+        avg.gridx = 1;
+        avg.gridy = 0;
+        avg.gridwidth = 1;
+        avg.gridheight = 7;
+        avg.weightx = 1;
+        avg.weighty = 0.7;
+        avg.anchor=GridBagConstraints.NORTHEAST;
+        avg.fill=GridBagConstraints.HORIZONTAL;
+        frame.getContentPane().add(avgGraph, avg);
+
+        GraphControls totAvgControls = new GraphControls();
+        c.gridx = 0;
+        c.gridy = 15;
+        frame.getContentPane().add(totAvgControls, c);
+
+        DynamicGraph totAvgGraph = new DynamicGraph(totavgList, "Average", "Piezo Output", "Time", totAvgControls.getLocalised(), totAvgControls.getTimeLimit(), totAvgControls.getOutliers());
+        totavg.gridx = 0;
+        totavg.gridy = 8;
+        totavg.gridwidth = 1;
+        totavg.gridheight = 7;
+        totavg.weightx = 1;
+        totavg.weighty = 0.7;
+        totavg.anchor=GridBagConstraints.SOUTHWEST;
+        totavg.fill=GridBagConstraints.HORIZONTAL;
+        frame.getContentPane().add(totAvgGraph, totavg);
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
+
+        for(int i =1; i<8000; i++){
             Thread.sleep(500);
             Random rand = new Random();
             int randint = rand.nextInt(10);
-            list.add(randint+45);
-            DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
-            frame.remove(graph);
-            graph = graphNew;
-            frame.getContentPane().add(graph, c);
+            double rad = Math.toRadians(10*i);
+            int in = (int) (50*Math.sin(rad));
+            list.add(in+50+randint);
+            avgList.add(movingAverage(list));
+            totavgList.add(average(list));
+            DynamicGraph newRaw = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
+            frame.remove(rawGraph);
+            rawGraph = newRaw;
+            frame.getContentPane().add(rawGraph, raw);
+
+            DynamicGraph newAvg = new DynamicGraph(avgList, "Moving Average", "Piezo Output", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
+            frame.remove(avgGraph);
+            avgGraph = newAvg;
+            frame.getContentPane().add(avgGraph, avg);
+
+            DynamicGraph newTotAvg = new DynamicGraph(totavgList, "Average", "Piezo Output", "Time", totAvgControls.getLocalised(), totAvgControls.getTimeLimit(), totAvgControls.getOutliers());
+            frame.remove(totAvgGraph);
+            totAvgGraph = newTotAvg;
+            frame.getContentPane().add(totAvgGraph, totavg);
+
             frame.revalidate();
             frame.repaint();
         }
     }
 
-    // this is me just fooling around to see if i could get a graph based on the Data
-    public static void sensorGraph() throws InterruptedException{
-        //SensorGraph dataGraph = new SensorGraph();
-        JFrame frame = new JFrame("SensorGraph");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //frame.getContentPane().add(dataGraph);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+    static int movingAverage(ArrayList<Integer> data){
+        int size = data.size();
+        int count = 0;
+        if(size<10){
+            for(Integer i:data){
+                count = count + i;
+            }
+            return count/size;
+        } else {
+            for (int i = size - 10; i < size; i++) {
+                count = count + data.get(i);
+            }
+        }
+        return count/10;
     }
+
+    static int average(ArrayList<Integer> data) {
+        int size = data.size();
+        int count = 0;
+        for(Integer i:data){
+            count = count + i;
+        }
+        return count/size;
+    }
+
+
 
     // arduino just makes the connection to the port where the arduino is
     public static void arduino() throws InterruptedException, IOException {

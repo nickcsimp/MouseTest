@@ -7,11 +7,12 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class DynamicGraph extends JPanel {
-    private static final int PREF_W = 800;
-    private static final int PREF_H = 650;
+    private static final int PREF_W = 500;
+    private static final int PREF_H = 500;
     private static final int BORDER_GAP = 80;
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
+    private static final Color OUTLIER_POINT_COLOR = new Color(255, 0, 0, 180);
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
 
@@ -35,19 +36,20 @@ public class DynamicGraph extends JPanel {
     int yMax;
     int xMin;
     int xMax;
-    boolean outliers;
+    int[] outliers;
+    private boolean[] outlierBool;
 
-    public DynamicGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, boolean outliers) {
+    public DynamicGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits) {
+        this.setBorder(BorderFactory.createMatteBorder(1,1,0,1,Color.black));
         scores = data;
         this.localised = localised;
         TIME_LIMIT = timeLimit;
         this.title = title;
         this.yaxis=yaxis;
         this.xaxis=xaxis;
-        this.outliers = outliers;
+        this.outliers = outLimits;
     }
 
-    //TODO Red if below certain value for average
     //TODO think about sampling frequency
 
     @Override
@@ -59,6 +61,7 @@ public class DynamicGraph extends JPanel {
         graphHeight = getHeight()- BORDER_GAP * 2;
 
         doGraphSizes();
+        outlierBool = new boolean[1+maximumX-minimumX];
         List<Point> graphPoints = getPoints();
 
         yAxis(g2);
@@ -81,10 +84,16 @@ public class DynamicGraph extends JPanel {
         g2.setColor(GRAPH_POINT_COLOR);
         for (int i = 0; i < graphPoints.size(); i++) {
             int x = graphPoints.get(i).x - GRAPH_POINT_WIDTH / 2;
+            if(outlierBool[i]){
+                g2.setColor(OUTLIER_POINT_COLOR);
+            }
             int y = graphPoints.get(i).y - GRAPH_POINT_WIDTH / 2;;
             int ovalW = GRAPH_POINT_WIDTH;
             int ovalH = GRAPH_POINT_WIDTH;
             g2.fillOval(x, y, ovalW, ovalH);
+            if(outlierBool[i]){
+                g2.setColor(GRAPH_POINT_COLOR);
+            }
         }
     }
 
@@ -92,6 +101,17 @@ public class DynamicGraph extends JPanel {
     public Dimension getPreferredSize() {
         return new Dimension(PREF_W, PREF_H);
     }
+
+    @Override
+    public Dimension getMaximumSize() {
+        return new Dimension(PREF_W, PREF_H);
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(PREF_W, PREF_H);
+    }
+
 
     public int maximum(List<Integer> list, int upper, int lower){
         Integer output = 0;
@@ -117,18 +137,27 @@ public class DynamicGraph extends JPanel {
         List<Point> graphPoints = new ArrayList<>();
         if(maximumX<TIME_LIMIT) {
             for (int i = 0; i <= maximumX; i++) {
+                outlierBool[i]=isOutlier(scores.get(minimumX+i));
                 int x1 = ((i * graphWidth / xScale) + BORDER_GAP);
                 int y1 = (graphHeight + BORDER_GAP) - ((scores.get(minimumX+i)-yMin) * graphHeight) / yScale;
                 graphPoints.add(new Point(x1, y1));
             }
-        } else {
+        } else {//TODO two identical loops!
             for (int i = 0; i <= TIME_LIMIT; i++) {
+                outlierBool[i]=isOutlier(scores.get(minimumX+i));
                 int x1 = ((i * graphWidth / xScale) + BORDER_GAP);
                 int y1 = (graphHeight + BORDER_GAP) - ((scores.get(minimumX+i)-yMin) * graphHeight) / yScale;
                 graphPoints.add(new Point(x1, y1));
             }
         }
         return graphPoints;
+    }
+
+    private boolean isOutlier(int i){
+        if(i<outliers[1] || i>outliers[0]){
+            return true;
+        }
+        return false;
     }
 
     private void doGraphSizes(){

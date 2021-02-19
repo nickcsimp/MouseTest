@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class Export extends JFrame {
     private ArrayList<Integer> list;
     private boolean localised;
-    private boolean outlier;
+    private int[] outlier;
     private int timeLimited;
     private String title;
     private String xaxis;
@@ -30,7 +30,8 @@ public class Export extends JFrame {
         setLayout(new GridBagLayout());
 
         localised = true;
-        outlier = false;
+        outlier[0] = 0;
+        outlier[2] = 1000;
         timeLimited = 300;
         title="Title";
         xaxis="X Axis";
@@ -60,14 +61,14 @@ public class Export extends JFrame {
             updateGraph();
         });
         add(localisation);
-
+        /*
         JRadioButton outliers = new JRadioButton("Highlight Outliers", outlier);
         localisation.addActionListener(evt ->{
             outlier=outliers.isSelected();
             updateGraph();
         });
         add(outliers);
-
+        */
         JLabel timeLabel = new JLabel("Time Limit (s)");
         JFormattedTextField timeLimit = new JFormattedTextField(timeLimited);
         timeLimit.addActionListener(evt ->{
