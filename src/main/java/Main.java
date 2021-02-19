@@ -97,7 +97,7 @@ public class Main {
         };
         new Timer(500, taskPerformer).start();*/
         //dynamicGraph();
-        testDashboard();
+       ftTest();
     }
 
     public static JPanel rawInput(JFrame frame, JPanel graph, ArrayList<Integer> list, boolean local, int time, int[] out) throws InterruptedException {
@@ -328,6 +328,86 @@ public class Main {
 
     }
 
+
+    public static void ftTest(){
+        JFrame frame = new JFrame("Dashboard");
+        frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+        frame.setLayout(new GridBagLayout());
+        double sampFreq=10;
+        double timePeriod=1/sampFreq;
+        int length = 80;
+        double[] inputReal = new double[length];
+        double[] inputImag = new double[length];
+        double[] outputReal = new double[length];
+        double[] outputImag = new double[length];
+        Random rand = new Random();
+        for(int i =0; i<length; i++) {
+            int randint = rand.nextInt(10);
+            double rad = Math.toRadians(4.5*i*360*timePeriod);
+            double rads = Math.toRadians(i*360*timePeriod);
+            double ins = 50*Math.sin(rads+0.2);
+            double in = 100*Math.sin(rad+0.2);
+            inputReal[i] = in+randint+ins;
+        }
+        dft(inputReal, inputImag, outputReal, outputReal);
+
+        double[] shifted = new double[length/2];
+        for(int i=1; i<length/2; i++){
+            shifted[i]=outputReal[length-i];
+        }
+
+        int noOfPeaks = length-maxInd(outputReal);
+        double freq = noOfPeaks/(length/sampFreq);
+
+        FTGraph graph = new FTGraph(shifted, sampFreq);
+        frame.getContentPane().add(graph);
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
+        System.out.println(freq);
+
+    }
+
+    static void dft(double[] inreal , double[] inimag,
+                    double[] outreal, double[] outimag) {
+        int n = inreal.length;
+        for (int k = 0; k < n; k++) {  // For each output element
+            double sumreal = 0;
+            double sumimag = 0;
+            for (int t = 0; t < n; t++) {  // For each input element
+                double angle = 2 * Math.PI * t * k / n;
+                sumreal +=  inreal[t] * Math.cos(angle) + inimag[t] * Math.sin(angle);
+                sumimag += -inreal[t] * Math.sin(angle) + inimag[t] * Math.cos(angle);
+            }
+            outreal[k] = sumreal;
+            outimag[k] = sumimag;
+        }
+    }
+
+    static double maxDub(double[] input){
+        double output=0;
+        for(double d:input){
+            if(d>output){
+                output=d;
+            }
+        }
+        return output;
+    }
+
+    static int maxInd(double[] input){
+        double output=0;
+        int index=0;
+        for(int i=0; i<input.length; i++){
+            double d=input[i];
+            if(d>output){
+                output=d;
+                index=i;
+            }
+        }
+        return index;
+    }
 
 }
 
