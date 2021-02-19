@@ -97,7 +97,7 @@ public class Main {
         };
         new Timer(500, taskPerformer).start();*/
         //dynamicGraph();
-       ftTest();
+       testDashboard();
     }
 
     public static JPanel rawInput(JFrame frame, JPanel graph, ArrayList<Integer> list, boolean local, int time, int[] out) throws InterruptedException {
@@ -172,6 +172,11 @@ public class Main {
         ArrayList<Integer> list = new ArrayList<>();
         ArrayList<Integer> avgList = new ArrayList<>();
         ArrayList<Integer> totavgList = new ArrayList<>();
+        int length = 40;
+        double[] inputReal = new double[length];
+        double[] inputImag = new double[length];
+        double[] outputReal = new double[length];
+        double[] outputImag = new double[length];
         list.add(50);
         avgList.add(movingAverage(list));
         totavgList.add(average(list));
@@ -180,6 +185,7 @@ public class Main {
         frame.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         GridBagConstraints raw = new GridBagConstraints();
+        GridBagConstraints ft = new GridBagConstraints();
         GridBagConstraints avg = new GridBagConstraints();
         GridBagConstraints totavg = new GridBagConstraints();
 
@@ -193,6 +199,21 @@ public class Main {
         c.fill=GridBagConstraints.HORIZONTAL;
         frame.getContentPane().add(rawControls, c);
 
+        //double[] ftIn = new double[length];
+        inputReal[0]=50;
+        dft(inputReal, inputImag, outputReal, outputImag);
+
+        FTGraph ftGraph = new FTGraph(outputReal, 8);
+        ft.gridx = 1;
+        ft.gridy = 0;
+        ft.gridwidth = 1;
+        ft.gridheight = 8;
+        ft.weightx = 1;
+        ft.weighty = 0.8;
+        ft.anchor=GridBagConstraints.NORTHEAST;
+        ft.fill=GridBagConstraints.HORIZONTAL;
+        frame.getContentPane().add(ftGraph, ft);
+
         DynamicGraph rawGraph = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
         raw.gridx = 0;
         raw.gridy = 0;
@@ -205,34 +226,34 @@ public class Main {
         frame.getContentPane().add(rawGraph, raw);
 
         GraphControls avgControls = new GraphControls();
-        c.gridx = 1;
-        c.gridy = 7;
+        c.gridx = 0;
+        c.gridy = 15;
         frame.getContentPane().add(avgControls, c);
 
         DynamicGraph avgGraph = new DynamicGraph(avgList, "Moving Average", "Piezo Output", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
-        avg.gridx = 1;
-        avg.gridy = 0;
+        avg.gridx = 0;
+        avg.gridy = 8;
         avg.gridwidth = 1;
         avg.gridheight = 7;
         avg.weightx = 1;
         avg.weighty = 0.7;
-        avg.anchor=GridBagConstraints.NORTHEAST;
+        avg.anchor=GridBagConstraints.SOUTHWEST;
         avg.fill=GridBagConstraints.HORIZONTAL;
         frame.getContentPane().add(avgGraph, avg);
 
         GraphControls totAvgControls = new GraphControls();
-        c.gridx = 0;
+        c.gridx = 1;
         c.gridy = 15;
         frame.getContentPane().add(totAvgControls, c);
 
         DynamicGraph totAvgGraph = new DynamicGraph(totavgList, "Average", "Piezo Output", "Time", totAvgControls.getLocalised(), totAvgControls.getTimeLimit(), totAvgControls.getOutliers());
-        totavg.gridx = 0;
+        totavg.gridx = 1;
         totavg.gridy = 8;
         totavg.gridwidth = 1;
         totavg.gridheight = 7;
         totavg.weightx = 1;
         totavg.weighty = 0.7;
-        totavg.anchor=GridBagConstraints.SOUTHWEST;
+        totavg.anchor=GridBagConstraints.SOUTHEAST;
         totavg.fill=GridBagConstraints.HORIZONTAL;
         frame.getContentPane().add(totAvgGraph, totavg);
 
@@ -245,15 +266,32 @@ public class Main {
             Thread.sleep(500);
             Random rand = new Random();
             int randint = rand.nextInt(10);
-            double rad = Math.toRadians(10*i);
+            double rad = Math.toRadians(20*i);
             int in = (int) (50*Math.sin(rad));
             list.add(in+50+randint);
+            //TODO make input length to FT adjustable
+            //TODO output from FT into avg then avg to proper average
+            if(i<length) {
+                inputReal[i] = in+50+randint;
+            } else {
+                for(int j=0;j<length-1;j++){
+                    inputReal[j]=inputReal[j+1];
+                }
+                inputReal[length-1]=in+50+randint;
+            }
+            dft(inputReal, inputImag, outputReal, outputImag);
+
             avgList.add(movingAverage(list));
             totavgList.add(average(list));
             DynamicGraph newRaw = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
             frame.remove(rawGraph);
             rawGraph = newRaw;
             frame.getContentPane().add(rawGraph, raw);
+
+            FTGraph newFT = new FTGraph(outputReal, 8);
+            frame.remove(ftGraph);
+            ftGraph = newFT;
+            frame.getContentPane().add(ftGraph, ft);
 
             DynamicGraph newAvg = new DynamicGraph(avgList, "Moving Average", "Piezo Output", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
             frame.remove(avgGraph);

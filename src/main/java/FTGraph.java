@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -7,8 +8,8 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class FTGraph extends JPanel {
-    private static final int PREF_W = 900;
-    private static final int PREF_H = 700;
+    private static final int PREF_W = 500;
+    private static final int PREF_H = 500;
     private static final int BORDER_GAP = 80;
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
@@ -167,10 +168,9 @@ public class FTGraph extends JPanel {
             int x0 = BORDER_GAP+i*division;
 
             g2.drawLine(x0, y0, x0, y1);
-            //Number of points = list.length/2;
-            //Maximum freq = sampling freq
-            //hatchSize=sampling freq/10
-            g2.drawString(String.valueOf(hatchSizeX * i), x0 - 5, getHeight() - BORDER_GAP + 20);
+            DecimalFormat df = new DecimalFormat("#.#");
+
+            g2.drawString(String.valueOf(df.format(hatchSizeX * i)), x0 - 5, getHeight() - BORDER_GAP + 20);
             g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
         }
     }
