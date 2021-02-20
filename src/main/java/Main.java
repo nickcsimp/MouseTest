@@ -20,6 +20,8 @@ public class Main {
     private static ArrayList<String> Data = new ArrayList<String>(); //this contains the info from the sensor
 
     public static void main(String[] args) throws InterruptedException, IOException {
+        arduino();
+
     /*
         //Create mainFrame
         JFrame frame = new JFrame("Mousify");
@@ -341,14 +343,16 @@ public class Main {
 
     // arduino just makes the connection to the port where the arduino is
     public static void arduino() throws InterruptedException, IOException {
-        sp = SerialPort.getCommPort("/dev/tty.usbmodem14301");
-
-        sp.setComPortParameters(9600, 8, 1, 0);
-        if (sp.openPort()) {
-            System.out.println("Port is open :)");
-        } else {
-            System.out.println("Failed to open port :(");
-            return;
+        for (SerialPort s : SerialPort.getCommPorts()) //iterate through all the ports
+        {
+            String PortName = s.getSystemPortName();
+            if(PortName.length() > 12) {
+                if(PortName.substring(0, 12).equals("tty.usbmodem")){
+                    System.out.println("Found port :)");
+                    sp = s;
+                    break;
+                }
+            }
         }
 
     }
