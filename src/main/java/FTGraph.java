@@ -104,8 +104,8 @@ public class FTGraph extends JPanel {
     public double maximum(double[] list){
         double output = 0;
         for(int i=0; i<scores.length; i++) {
-            if (list[i] > output) {
-                output = list[i];
+            if (Math.abs(list[i]) > output) {
+                output = Math.abs(list[i]);
             }
         }
         return output;
@@ -114,8 +114,8 @@ public class FTGraph extends JPanel {
     public double minimum(double[] list){
         double output = maximum(list);
         for(int i=0; i<scores.length; i++){
-            if(list[i]<output){
-                output=list[i];
+            if(Math.abs(list[i])<output){
+                output=Math.abs(list[i]);
             }
         }
         return output;
@@ -125,7 +125,7 @@ public class FTGraph extends JPanel {
         List<Point> graphPoints = new ArrayList<>();
         for (int i = 0; i < scores.length; i++) {
             int x1 = ((i * graphWidth / scores.length) + BORDER_GAP);
-            int y1 = (int)((graphHeight + BORDER_GAP) - ((scores[i]-yMin) * graphHeight) / yScale);
+            int y1 = (int)((graphHeight + BORDER_GAP) - ((Math.abs(scores[i])-yMin) * graphHeight) / yScale);
             graphPoints.add(new Point(x1, y1));
         }
 
@@ -204,6 +204,25 @@ public class FTGraph extends JPanel {
         g2.drawString(xaxis, xAxisX, xAxisY);
         g2.setFont(rotatedFont);
         g2.drawString(yaxis, yAxisX, yAxisY);
+    }
+
+    public double getFreq(){
+        int length = scores.length;
+        int noOfPeaks = maxInd(scores);
+        return noOfPeaks/(2*length/samplingFreq);
+    }
+
+    int maxInd(double[] input){
+        double output=0;
+        int index=0;
+        for(int i=0; i<input.length; i++){
+            double d=Math.abs(input[i]);
+            if(d>output){
+                output=d;
+                index=i;
+            }
+        }
+        return index;
     }
 
 }

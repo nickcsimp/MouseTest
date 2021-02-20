@@ -178,7 +178,7 @@ public class Main {
         double[] outputReal = new double[length];
         double[] outputImag = new double[length];
         list.add(50);
-        avgList.add(movingAverage(list));
+        avgList.add(1);
         totavgList.add(average(list));
         JFrame frame = new JFrame("Dashboard");
         frame.setExtendedState(Frame.MAXIMIZED_BOTH);
@@ -203,7 +203,7 @@ public class Main {
         inputReal[0]=50;
         dft(inputReal, inputImag, outputReal, outputImag);
 
-        FTGraph ftGraph = new FTGraph(outputReal, 8);
+        FTGraph ftGraph = new FTGraph(outputReal, 2);
         ft.gridx = 1;
         ft.gridy = 0;
         ft.gridwidth = 1;
@@ -230,7 +230,7 @@ public class Main {
         c.gridy = 15;
         frame.getContentPane().add(avgControls, c);
 
-        DynamicGraph avgGraph = new DynamicGraph(avgList, "Moving Average", "Piezo Output", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
+        DynamicGraph avgGraph = new DynamicGraph(avgList, "Breathing Rate", "Rate (Hz)", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
         avg.gridx = 0;
         avg.gridy = 8;
         avg.gridwidth = 1;
@@ -241,12 +241,8 @@ public class Main {
         avg.fill=GridBagConstraints.HORIZONTAL;
         frame.getContentPane().add(avgGraph, avg);
 
-        GraphControls totAvgControls = new GraphControls();
-        c.gridx = 1;
-        c.gridy = 15;
-        frame.getContentPane().add(totAvgControls, c);
-
-        DynamicGraph totAvgGraph = new DynamicGraph(totavgList, "Average", "Piezo Output", "Time", totAvgControls.getLocalised(), totAvgControls.getTimeLimit(), totAvgControls.getOutliers());
+        JLabel bpm= new JLabel("Breaths/Min: "+60*ftGraph.getFreq());
+        bpm.setFont(new Font("verdana", Font.PLAIN, 72));
         totavg.gridx = 1;
         totavg.gridy = 8;
         totavg.gridwidth = 1;
@@ -255,7 +251,7 @@ public class Main {
         totavg.weighty = 0.7;
         totavg.anchor=GridBagConstraints.SOUTHEAST;
         totavg.fill=GridBagConstraints.HORIZONTAL;
-        frame.getContentPane().add(totAvgGraph, totavg);
+        frame.getContentPane().add(bpm, totavg);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
@@ -263,14 +259,14 @@ public class Main {
         frame.setVisible(true);
 
         for(int i =1; i<8000; i++){
-            Thread.sleep(500);
+            Thread.sleep(250);
             Random rand = new Random();
             int randint = rand.nextInt(10);
-            double rad = Math.toRadians(20*i);
-            int in = (int) (50*Math.sin(rad));
+            double rad = Math.toRadians(i*90);
+            int in = (int) (50*Math.sin(1.2*rad+0.2));
             list.add(in+50+randint);
             //TODO make input length to FT adjustable
-            //TODO output from FT into avg then avg to proper average
+            //TODO different graphs for each thing
             if(i<length) {
                 inputReal[i] = in+50+randint;
             } else {
@@ -281,27 +277,35 @@ public class Main {
             }
             dft(inputReal, inputImag, outputReal, outputImag);
 
-            avgList.add(movingAverage(list));
+            double[] shifted = new double[length/2];
+            for(int j=1; j<length/2; j++){
+                shifted[j]=outputReal[length-j];
+            }
+
+            avgList.add((int)ftGraph.getFreq());
+
+            //avgList.add(movingAverage(list));
             totavgList.add(average(list));
             DynamicGraph newRaw = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
             frame.remove(rawGraph);
             rawGraph = newRaw;
             frame.getContentPane().add(rawGraph, raw);
 
-            FTGraph newFT = new FTGraph(outputReal, 8);
+            FTGraph newFT = new FTGraph(shifted, 4);
             frame.remove(ftGraph);
             ftGraph = newFT;
             frame.getContentPane().add(ftGraph, ft);
 
-            DynamicGraph newAvg = new DynamicGraph(avgList, "Moving Average", "Piezo Output", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
+            DynamicGraph newAvg = new DynamicGraph(avgList, "Breathing Rate", "Rate (Hz)", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
             frame.remove(avgGraph);
             avgGraph = newAvg;
             frame.getContentPane().add(avgGraph, avg);
 
-            DynamicGraph newTotAvg = new DynamicGraph(totavgList, "Average", "Piezo Output", "Time", totAvgControls.getLocalised(), totAvgControls.getTimeLimit(), totAvgControls.getOutliers());
-            frame.remove(totAvgGraph);
-            totAvgGraph = newTotAvg;
-            frame.getContentPane().add(totAvgGraph, totavg);
+            JLabel newbpm = new JLabel("Breaths/Min: "+60*ftGraph.getFreq());
+            frame.remove(bpm);
+            newbpm.setFont(new Font("verdana", Font.PLAIN, 72));
+            bpm = newbpm;
+            frame.getContentPane().add(bpm, totavg);
 
             frame.revalidate();
             frame.repaint();
@@ -410,7 +414,15 @@ public class Main {
 
     static void dft(double[] inreal , double[] inimag,
                     double[] outreal, double[] outimag) {
+        double realCount = 0;
         int n = inreal.length;
+        for (int k = 0; k < n; k++) {
+            realCount += inreal[k];
+        }
+        double realMean = realCount/n;
+        for (int k = 0; k < n; k++) {
+            inreal[k] = inreal[k]-realMean;
+        }
         for (int k = 0; k < n; k++) {  // For each output element
             double sumreal = 0;
             double sumimag = 0;
@@ -422,6 +434,7 @@ public class Main {
             outreal[k] = sumreal;
             outimag[k] = sumimag;
         }
+
     }
 
     static double maxDub(double[] input){

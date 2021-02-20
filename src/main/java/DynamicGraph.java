@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,6 +17,7 @@ public class DynamicGraph extends JPanel {
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
 
+    private static final int SAMPLING_FREQUENCY = 4;
     private int TIME_LIMIT;
     private List<Integer> scores;
     private boolean localised;
@@ -43,7 +45,7 @@ public class DynamicGraph extends JPanel {
         this.setBorder(BorderFactory.createMatteBorder(1,1,0,1,Color.black));
         scores = data;
         this.localised = localised;
-        TIME_LIMIT = timeLimit;
+        TIME_LIMIT = timeLimit*SAMPLING_FREQUENCY;
         this.title = title;
         this.yaxis=yaxis;
         this.xaxis=xaxis;
@@ -209,8 +211,10 @@ public class DynamicGraph extends JPanel {
             int division = graphWidth/10;
             int x0 = BORDER_GAP+i*division;
 
+            DecimalFormat df = new DecimalFormat("#.#");
+
             g2.drawLine(x0, y0, x0, y1);
-            g2.drawString(String.valueOf((hatchSizeX * i)+xMin), x0 - 5, getHeight() - BORDER_GAP + 20);
+            g2.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/SAMPLING_FREQUENCY)), x0 - 5, getHeight() - BORDER_GAP + 20);
             g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
         }
     }
