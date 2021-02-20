@@ -7,7 +7,7 @@ import java.util.Random;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class DynamicGraph extends JPanel {
+public class RawGraph extends JPanel {
     private static final int PREF_W = 500;
     private static final int PREF_H = 500;
     private static final int BORDER_GAP = 80;
@@ -41,7 +41,7 @@ public class DynamicGraph extends JPanel {
     int[] outliers;
     private boolean[] outlierBool;
 
-    public DynamicGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits) {
+    public RawGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits) {
         this.setBorder(BorderFactory.createMatteBorder(1,1,0,1,Color.black));
         scores = data;
         this.localised = localised;

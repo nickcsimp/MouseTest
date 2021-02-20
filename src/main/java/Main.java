@@ -1,15 +1,8 @@
 import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortDataListener;
-import com.fazecast.jSerialComm.SerialPortEvent;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.Timer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Main {
@@ -110,7 +103,7 @@ public class Main {
         c.weightx = 0.8;
         c.weighty = 1;
         //Makes the new graph with the new data
-        DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", local, time, out);
+        RawGraph graphNew = new RawGraph(list, "Raw Piezo Output", "Piezo Output", "Time", local, time, out);
         //Removes old graph
         frame.remove(graph);
         //Changes name
@@ -140,7 +133,7 @@ public class Main {
         c.weighty = 0.1;
         frame.getContentPane().add(controls, c);
 
-        DynamicGraph graph = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
+        RawGraph graph = new RawGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 1;
@@ -159,7 +152,7 @@ public class Main {
             Random rand = new Random();
             int randint = rand.nextInt(10);
             list.add(randint+45);
-            DynamicGraph graphNew = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
+            RawGraph graphNew = new RawGraph(list, "Raw Piezo Output", "Piezo Output", "Time", controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers());
             frame.remove(graph);
             graph = graphNew;
             frame.getContentPane().add(graph, c);
@@ -214,7 +207,7 @@ public class Main {
         ft.fill=GridBagConstraints.HORIZONTAL;
         frame.getContentPane().add(ftGraph, ft);
 
-        DynamicGraph rawGraph = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
+        RawGraph rawGraph = new RawGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
         raw.gridx = 0;
         raw.gridy = 0;
         raw.gridwidth = 1;
@@ -230,7 +223,7 @@ public class Main {
         c.gridy = 15;
         frame.getContentPane().add(avgControls, c);
 
-        DynamicGraph avgGraph = new DynamicGraph(avgList, "Breathing Rate", "Rate (Hz)", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
+        RawGraph avgGraph = new RawGraph(avgList, "Breathing Rate", "Rate (Hz)", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
         avg.gridx = 0;
         avg.gridy = 8;
         avg.gridwidth = 1;
@@ -258,15 +251,20 @@ public class Main {
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
 
+        ArrayList<Integer> mavgList=new ArrayList<>();
+
         for(int i =1; i<8000; i++){
             Thread.sleep(250);
             Random rand = new Random();
             int randint = rand.nextInt(10);
             double rad = Math.toRadians(i*90);
-            int in = (int) (50*Math.sin(1.2*rad+0.2));
-            list.add(in+50+randint);
+            int in = (int) (50*Math.sin((1.2-0.0005*i)*rad+0.2));
+            list.add(in+50);
             //TODO make input length to FT adjustable
-            //TODO different graphs for each thing
+            //TODO different graphs for each thing - more specialised
+            //TODO Make graphs less jumpy
+            //TODO add some user inputs
+            //TODO finish exportation
             if(i<length) {
                 inputReal[i] = in+50+randint;
             } else {
@@ -282,11 +280,11 @@ public class Main {
                 shifted[j]=outputReal[length-j];
             }
 
-            avgList.add((int)ftGraph.getFreq());
+            avgList.add((int)(60*ftGraph.getFreq()));
 
-            //avgList.add(movingAverage(list));
+            mavgList.add(movingAverage(avgList));
             totavgList.add(average(list));
-            DynamicGraph newRaw = new DynamicGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
+            RawGraph newRaw = new RawGraph(list, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
             frame.remove(rawGraph);
             rawGraph = newRaw;
             frame.getContentPane().add(rawGraph, raw);
@@ -296,7 +294,7 @@ public class Main {
             ftGraph = newFT;
             frame.getContentPane().add(ftGraph, ft);
 
-            DynamicGraph newAvg = new DynamicGraph(avgList, "Breathing Rate", "Rate (Hz)", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
+            RawGraph newAvg = new RawGraph(mavgList, "Breathing Rate", "Rate (Hz)", "Time", avgControls.getLocalised(), avgControls.getTimeLimit(), avgControls.getOutliers());
             frame.remove(avgGraph);
             avgGraph = newAvg;
             frame.getContentPane().add(avgGraph, avg);
