@@ -189,17 +189,19 @@ public class HomePage extends JFrame {
     }
 
 
-
-
-    // arduino just makes the connection to the port where the arduino is
     public static void arduino() throws InterruptedException, IOException {
-        sp = SerialPort.getCommPort("/dev/tty.usbmodem14301");
-
-        sp.setComPortParameters(9600, 8, 1, 0);
-        if (sp.openPort()) {
-            System.out.println("Port is open :)");
-        } else {
-            System.out.println("Failed to open port :(");
+        for (SerialPort s : SerialPort.getCommPorts()) //iterate through all the ports
+        {
+            String PortName = s.getSystemPortName();
+            if(PortName.length() > 12) {
+                if(PortName.substring(0, 12).equals("tty.usbmodem")){
+                    System.out.println("Found port :)");
+                    sp = s;
+                    sp.setComPortParameters(9600, 8, 1, 0);
+                    sp.openPort();
+                    break;
+                }
+            }
         }
 
     }
