@@ -8,8 +8,8 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class FTGraph extends JPanel {
-    private static final int PREF_W = 500;
-    private static final int PREF_H = 500;
+    private static final int PREF_W = 600;
+    private static final int PREF_H = 600;
     private static final int BORDER_GAP = 80;
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
