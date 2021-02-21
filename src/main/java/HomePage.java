@@ -13,6 +13,15 @@ import java.util.ArrayList;
 public class HomePage extends JFrame {
     private static int SAMPLING_FREQUENCY=4;
 
+    //TODO merge clara
+    //TODO settings page
+    //TODO make layout nicer
+    //TODO analogue input?
+    //TODO streamline code
+    //TODO less stored info
+    //TODO export
+    //TODO start/stop
+
     private static BufferedReader input;
     /** The output stream to the port */
     private static OutputStream output;
