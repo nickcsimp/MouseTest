@@ -11,9 +11,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 
 public class HomePage extends JFrame {
-    private static int SAMPLING_FREQUENCY=4;
+    private static int SAMPLING_FREQUENCY=5;
 
-    //TODO merge clara
     //TODO settings page
     //TODO make layout nicer
     //TODO analogue input?
@@ -64,9 +63,21 @@ public class HomePage extends JFrame {
         GraphControls homeControls = new GraphControls();
         getContentPane().add(homeControls, leftControlsC);
 
+        final JPanel[] rightPanel = {stats(tempData)};
+        final RawGraph[] leftGraph = {new RawGraph(outputData, "Moving Average Breaths Per Minute", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers())};
+        final FTGraph[] rightGraph = {new FTGraph(dataFT,SAMPLING_FREQUENCY)};
+        getContentPane().add(leftGraph[0], leftGraphC);
+        getContentPane().add(rightPanel[0], rightPanelC);
+
         JButton homeButt = new JButton("Homepage");
         homeButt.addActionListener(evt->{
+            remove(leftGraph[0]);
             remove(rawControls);
+            remove(rightGraph[0]);
+            RawGraph graphNew = new RawGraph(outputData, "Moving Average Breaths Per Minute", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers());
+            leftGraph[0]=graphNew;
+            getContentPane().add(leftGraph[0], leftGraphC);
+            getContentPane().add(rightPanel[0], rightPanelC);
             add(homeControls, leftControlsC);
             display=0;
         });
@@ -74,7 +85,15 @@ public class HomePage extends JFrame {
 
         JButton rawButt = new JButton("Raw Data");
         rawButt.addActionListener(evt->{
+            remove(leftGraph[0]);
             remove(homeControls);
+            remove(rightPanel[0]);
+            RawGraph graphNew = new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
+            leftGraph[0]=graphNew;
+            FTGraph graphFTNew = new FTGraph(FToutput[0], SAMPLING_FREQUENCY);
+            rightGraph[0] = graphFTNew;
+            getContentPane().add(leftGraph[0], leftGraphC);
+            getContentPane().add(rightGraph[0], rightPanelC);
             add(rawControls, leftControlsC);
             display=1;
         });
@@ -86,12 +105,6 @@ public class HomePage extends JFrame {
         });
         add(setButt, menuSettings);
 
-        final JPanel[] rightPanel = {stats(tempData)};
-
-        final RawGraph[] leftGraph = {new RawGraph(outputData, "Moving Average Breaths Per Minute", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers())};
-        final FTGraph[] rightGraph = {new FTGraph(dataFT,SAMPLING_FREQUENCY)};
-        getContentPane().add(leftGraph[0], leftGraphC);
-        getContentPane().add(rightPanel[0], rightPanelC);
         final int[] count = {0};
         ActionListener taskPerformer = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -99,9 +112,15 @@ public class HomePage extends JFrame {
                     data.add(Integer.parseInt(getData())); //getData() just reads the data from the port your arduino is connected to
                     count[0] += 1;
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    data.add(0); //getData() just reads the data from the port your arduino is connected to
+                    count[0] += 1;
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    data.add(0); //getData() just reads the data from the port your arduino is connected to
+                    count[0] += 1;
+                }
+                catch (NumberFormatException e) {
+                    data.add(0); //getData() just reads the data from the port your arduino is connected to
+                    count[0] += 1;
                 }
                 if(count[0]<40) {
                     dataFT[count[0]]=data.get(count[0]-1);
@@ -128,7 +147,6 @@ public class HomePage extends JFrame {
                     //Adds new graph
                     getContentPane().add(rightPanel[0], rightPanelC);
 
-                    remove(rightGraph[0]);
                     //Makes the new graph with the new data
                     RawGraph graphNew = new RawGraph(outputData, "Moving Average Breaths Per Minute", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers());
                     //Removes old graph
@@ -163,7 +181,7 @@ public class HomePage extends JFrame {
                 repaint();
             }
         };
-        new Timer(500, taskPerformer).start();
+        new Timer(1000/SAMPLING_FREQUENCY, taskPerformer).start();
     }
 
     private JPanel stats(ArrayList<Integer> data){
@@ -212,10 +230,15 @@ public class HomePage extends JFrame {
     // I got this from https://stackoverflow.com/questions/16608878/read-data-from-a-java-socket
     private String getData() throws InterruptedException, IOException{
         BufferedReader bis = new BufferedReader(new InputStreamReader(sp.getInputStream()));
-        String inputLine; // temporally stores the new number from the port
+        String inputLine=new String(); // temporally stores the new number from the port
         sp.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0); //this line
         // is essential so when the program starts looking at the port, it doesnt just "give up" if it sees no info
-        inputLine = bis.readLine();
+        //inputLine = bis.readLine();
+        while (bis.ready ())
+        {
+            inputLine=bis.readLine();
+            //System.out.println(inputLine);
+        }
         // TODO it would be a good idea to add a check so the info is not null, but when i add this it doesnt work
         return inputLine;
         // while(inputLine != null)

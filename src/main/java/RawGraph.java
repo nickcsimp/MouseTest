@@ -21,7 +21,7 @@ public class RawGraph extends JPanel {
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
 
-    private static final int SAMPLING_FREQUENCY = 4;
+    private static final int SAMPLING_FREQUENCY = 5;
     private int TIME_LIMIT;
     private List<Integer> scores;
     private boolean localised;
