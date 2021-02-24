@@ -21,7 +21,7 @@ public class RawGraph extends JPanel {
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
 
-    private static final int SAMPLING_FREQUENCY = 5;
+    private int samplingFreq;
     private int TIME_LIMIT;
     private List<Integer> scores;
     private boolean localised;
@@ -45,11 +45,12 @@ public class RawGraph extends JPanel {
     int[] outliers;
     private boolean[] outlierBool;
 
-    public RawGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits) {
+    public RawGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits, int samplingFreq) {
         this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
+        this.samplingFreq=samplingFreq;
         scores = data;
         this.localised = localised;
-        TIME_LIMIT = timeLimit*SAMPLING_FREQUENCY;
+        TIME_LIMIT = timeLimit*samplingFreq;
         this.title = title;
         this.yaxis=yaxis;
         this.xaxis=xaxis;
@@ -221,7 +222,7 @@ public class RawGraph extends JPanel {
             DecimalFormat df = new DecimalFormat("#.#");
 
             g2.drawLine(x0, y0, x0, y1);
-            g2.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/SAMPLING_FREQUENCY)), x0 - 5, getHeight() - BORDER_GAP + 20);
+            g2.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/samplingFreq)), x0 - 5, getHeight() - BORDER_GAP + 20);
             g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
         }
     }

@@ -36,8 +36,8 @@ public class Export extends JFrame {
         xaxis="X Axis";
         yaxis="Y Axis";
 
-
-        graphPanel = new RawGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier);
+        int samplingFreq=4;//TODO
+        graphPanel = new RawGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier, samplingFreq);
         JButton confirm = new JButton("Confirm");
         confirm.addActionListener(evt -> {
             BufferedImage image = new BufferedImage(graphPanel.getWidth(), graphPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -84,7 +84,8 @@ public class Export extends JFrame {
     }
 
     public void updateGraph(){
-        RawGraph graphNew = new RawGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier);
+        int samplingFreq=4;//TODO
+        RawGraph graphNew = new RawGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier, samplingFreq);
         this.remove(graphPanel);
         graphPanel = graphNew;
         //Adds new graph

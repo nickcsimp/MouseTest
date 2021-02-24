@@ -16,8 +16,10 @@ public class DataRetrieval extends Thread{
     RawGraph rawGraph;
     GridBagConstraints c;
     int samplingFreq;
+    boolean finished;
+    FTControls ftControls;
 
-    public DataRetrieval(int samplingFreq, ArrayList<Integer> data, SerialPort sp, GraphControls c, JFrame frame, RawGraph rawGraph, GridBagConstraints cs, int display){
+    public DataRetrieval(FTControls ftControls, ArrayList<Integer> data, SerialPort sp, GraphControls c, JFrame frame, RawGraph rawGraph, GridBagConstraints cs, int display){
         this.data=data;
         this.sp = sp;
         rawControls=c;
@@ -25,11 +27,15 @@ public class DataRetrieval extends Thread{
         this.c = cs;
         this. rawGraph = rawGraph;
         this.display = display;
-        this.samplingFreq=samplingFreq;
+        this.samplingFreq=ftControls.getSampleFreq();
+        finished=false;
+        this.ftControls = ftControls;
     }
 
     public void run(){
-        while(true) {
+        while(!finished) {
+            this.samplingFreq=ftControls.getSampleFreq();
+            long startTime = System.nanoTime();
             int input = 0;
             try {
                 input = Integer.parseInt(getData());
@@ -43,14 +49,22 @@ public class DataRetrieval extends Thread{
             } else {
                 data.add(data.get(data.size()-1));
             }
-
             if(display==1){
                 updateGraph();
             }
+            long endTime = System.nanoTime();
+
+            long timeElapsed = endTime - startTime;
+            int sleepTime = 0;
+            if(((1000/samplingFreq)-timeElapsed/1000000)>0){
+                sleepTime=(int)((1000/samplingFreq)-timeElapsed/1000000);
+            }
+
             try {
-                Thread.sleep(1000/samplingFreq);
+                Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                finished=true;
+                return;
             }
         }
     }
@@ -72,13 +86,9 @@ public class DataRetrieval extends Thread{
         return inputLine;
     }
 
-    public RawGraph getRawGraph(){
-        return new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
-    }
-
     public void updateGraph(){
         frame.remove(rawGraph);
-        RawGraph newGraph = new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
+        RawGraph newGraph = new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers(), samplingFreq);
         rawGraph=newGraph;
         frame.add(rawGraph, c);
         frame.revalidate();
@@ -90,19 +100,26 @@ public class DataRetrieval extends Thread{
     }
 
     public double[] getFTInput(){
-        //TODO settings input
-        //TODO time scales fucked
-        double[] output = new double[40];
-        if (data.size() > 40) {
-            for(int i=0; i<40; i++){
-                output[i]=data.get(data.size()-40+i);
+        int sampleCount = ftControls.getSampleCount();
+        double[] output = new double[sampleCount];
+        double count = 0;
+        if (data.size() > sampleCount) {
+            for(int i=0; i<sampleCount; i++){
+                count += data.get(data.size()-sampleCount+i);
+            }
+            double avg = count/sampleCount;
+            for(int i=0; i<sampleCount; i++){
+                output[i]=data.get(data.size()-sampleCount+i)-avg;
             }
         } else {
             for(int i=0; i<data.size(); i++){
-                output[i]=data.get(i);
+                count += data.get(i);
+            }
+            double avg = count/sampleCount;
+            for(int i=0; i<data.size(); i++){
+                output[i]=data.get(i)-avg;
             }
         }
-
         return output;
     }
 

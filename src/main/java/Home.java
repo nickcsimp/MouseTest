@@ -11,17 +11,13 @@ public class Home {
     double[] FTdata;
     private static SerialPort sp;
     int display;
+    int tempdisplay;
 
     public Home(){
+        int samplingFreq=4;//TODO settings
 
-        try {
-            arduino();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         display=0;
+        tempdisplay=0;
         JFrame frame = new JFrame("Mousify");
         frame.setExtendedState(Frame.MAXIMIZED_BOTH);
         frame.setLayout(new GridBagLayout());
@@ -30,60 +26,73 @@ public class Home {
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
 
-        int samplingFreq=4;//TODO settings
         data = new ArrayList<>();
-        data.add(0);
         processedData = new ArrayList<>();
-        processedData.add(0);
-        GridBagConstraints menuHome = gridConstraints(0,0,2,1,1/3,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHWEST);
-        GridBagConstraints menuRaw = gridConstraints(2,0,2,1,1/3,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTH);
-        GridBagConstraints menuSettings = gridConstraints(4,0,2,1,1/3,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHEAST);
-        GridBagConstraints menuStart = gridConstraints(6,0,2,1,1/3,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHEAST);
-        GridBagConstraints leftGraphC = gridConstraints(0,1,4,8,1/2,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-        GridBagConstraints leftControlsC = gridConstraints(0,9,4,1,1/2,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-        GridBagConstraints rightPanelC = gridConstraints(4,1,4,8,1/2,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        FTdata=new double[40];//TODO
+        GridBagConstraints menuHome = gridConstraints(0,0,2,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHWEST);
+        GridBagConstraints menuRaw = gridConstraints(2,0,2,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTH);
+        GridBagConstraints menuSettings = gridConstraints(4,0,2,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHEAST);
+        GridBagConstraints menuStart = gridConstraints(6,0,2,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHEAST);
+        GridBagConstraints leftGraphC = gridConstraints(0,1,4,8,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+        GridBagConstraints leftControlsC = gridConstraints(0,9,4,1,0.5,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+        GridBagConstraints rightPanelC = gridConstraints(4,1,4,8,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        GridBagConstraints rightGraphC = gridConstraints(4,1,4,7,0.5,0.7,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        GridBagConstraints rightControlsC = gridConstraints(4,9,4,1,0.5,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
 
         GraphControls rawControls = new GraphControls();
         GraphControls homeControls = new GraphControls();
+        FTControls ftControls = new FTControls();
+        SidePanel sidePanel = new SidePanel();
 
-        JPanel rightPanel = new JPanel();
-        RawGraph procGraph = new RawGraph(processedData, "Moving Average Breaths Per Minute", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers());
-        RawGraph rawGraph = new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers());
-        FTGraph rightGraph = new FTGraph(FTdata, samplingFreq);
+        //JPanel rightPanel = new JPanel();
+        RawGraph procGraph = new RawGraph(processedData, "Moving Average Breaths Per Minute", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers(), 1);
+        RawGraph rawGraph = new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time (s)", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers(), ftControls.getSampleFreq());
+        FTGraph rightGraph = new FTGraph(FTdata, ftControls);
         JButton homeButt = new JButton("Homepage");
         JButton rawButt = new JButton("Raw Data");
-        JButton setButt = new JButton("Settings");
+        JButton setButt = new JButton("Pause");
         JButton startStopButt = new JButton("Start");
-        DataRetrieval dataRetrieval = new DataRetrieval(samplingFreq, data, sp, rawControls, frame, rawGraph, leftGraphC, display);
-        DFT discreteFourierTransform = new DFT(dataRetrieval, samplingFreq, frame, display, rightGraph, rightPanelC);
-        FTRetrieval ftRetrieval=new FTRetrieval(discreteFourierTransform, frame, procGraph, leftGraphC, display, homeControls);
 
         frame.add(homeButt, menuHome);
         frame.add(setButt, menuSettings);
         frame.add(rawButt, menuRaw);
+        frame.add(procGraph, leftGraphC);
+        frame.add(homeControls, leftControlsC);
+        frame.add(sidePanel, rightPanelC);
+        JButton loading = new JButton("Finding Arduino...");
+        frame.add(loading, menuStart);
+        while(sp==null) {
+            try {
+                arduino();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        frame.remove(loading);
         frame.add(startStopButt, menuStart);
+        frame.revalidate();
+        frame.repaint();
+
+        DataRetrieval dataRetrieval = new DataRetrieval(ftControls, data, sp, rawControls, frame, rawGraph, leftGraphC, display);
+        DFT discreteFourierTransform = new DFT(dataRetrieval, ftControls, frame, display, rightGraph, rightGraphC);
+        FTRetrieval ftRetrieval=new FTRetrieval(discreteFourierTransform, frame, procGraph, leftGraphC, display, homeControls, 1, sidePanel);
 
         startStopButt.addActionListener(evt->{
             if(startStopButt.getText().equals("Start")) {
                 startStopButt.setText("Stop");
                 dataRetrieval.start();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 discreteFourierTransform.start();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 ftRetrieval.start();
-            } else {
-                startStopButt.setText("Start");
+            } else if(startStopButt.getText().equals("Stop")) {
+                startStopButt.setText("Restart");
                 dataRetrieval.interrupt();
                 discreteFourierTransform.interrupt();
                 ftRetrieval.interrupt();
+            } else {
+                frame.dispose();
+                Home home = new Home();
             }
         });
 
@@ -92,25 +101,44 @@ public class Home {
             dataRetrieval.setDisplay(display);
             ftRetrieval.setDisplay(display);
             discreteFourierTransform.setDisplay(display);
+
             discreteFourierTransform.remove();
             dataRetrieval.remove();
-            ftRetrieval.updateGraph();
             frame.remove(rawControls);
+            frame.remove(ftControls);
+
+            ftRetrieval.updateGraph();
             frame.add(homeControls, leftControlsC);
+            frame.add(sidePanel, rightPanelC);
         });
         setButt.addActionListener(evt->{
-            display=2;
-            dataRetrieval.setDisplay(display);
-            ftRetrieval.setDisplay(display);
-            discreteFourierTransform.setDisplay(display);
+            if(setButt.getText().equals("Pause")) {
+                tempdisplay=display;
+                setButt.setText("Resume");
+                display = 2;
+                dataRetrieval.setDisplay(display);
+                ftRetrieval.setDisplay(display);
+                discreteFourierTransform.setDisplay(display);
+            } else {
+                setButt.setText("Resume");
+                display = tempdisplay;
+                dataRetrieval.setDisplay(display);
+                ftRetrieval.setDisplay(display);
+                discreteFourierTransform.setDisplay(display);
+            }
+
         });
         rawButt.addActionListener(evt->{
             display=1;
             dataRetrieval.setDisplay(display);
             ftRetrieval.setDisplay(display);
             discreteFourierTransform.setDisplay(display);
+
             ftRetrieval.remove();
             frame.remove(homeControls);
+            frame.remove(sidePanel);
+
+            frame.add(ftControls, rightControlsC);
             frame.add(rawControls, leftControlsC);
             discreteFourierTransform.updateGraph();
             dataRetrieval.updateGraph();

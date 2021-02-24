@@ -35,14 +35,16 @@ public class FTGraph extends JPanel {
     double xMin;
     double xMax;
     double samplingFreq;
+    int sampleCount;
 
-    public FTGraph(double[] data, double samplingFreq) {
+    public FTGraph(double[] data, FTControls ftControls) {
         this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
         scores = data;
         this.title = "Fourier Transform";
         this.yaxis="AU";
         this.xaxis="Frequency";
-        this.samplingFreq=samplingFreq;
+        this.samplingFreq=ftControls.getSampleFreq();
+        this.sampleCount=ftControls.getSampleCount();
     }
 
 
