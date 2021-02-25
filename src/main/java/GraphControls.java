@@ -8,7 +8,7 @@ public class GraphControls extends JPanel {
 
     public GraphControls(){
         this.setLayout(new GridBagLayout());
-        this.setBorder(BorderFactory.createMatteBorder(0,1,1,1,Color.black));
+        this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
         localised = true;
         outlierLimits = new int[2];
         timeLimited = 20;

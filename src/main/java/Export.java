@@ -1,7 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +14,7 @@ public class Export extends JFrame {
     private String title;
     private String xaxis;
     private String yaxis;
-    private DynamicGraph graphPanel;
+    private RawGraph graphPanel;
 
     //TODO Set begin and end times
     //TODO Stop getting new data from arduino
@@ -37,8 +36,8 @@ public class Export extends JFrame {
         xaxis="X Axis";
         yaxis="Y Axis";
 
-
-        graphPanel = new DynamicGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier);
+        int samplingFreq=4;//TODO
+        graphPanel = new RawGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier, samplingFreq);
         JButton confirm = new JButton("Confirm");
         confirm.addActionListener(evt -> {
             BufferedImage image = new BufferedImage(graphPanel.getWidth(), graphPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -85,7 +84,8 @@ public class Export extends JFrame {
     }
 
     public void updateGraph(){
-        DynamicGraph graphNew = new DynamicGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier);
+        int samplingFreq=4;//TODO
+        RawGraph graphNew = new RawGraph(list, title, yaxis, xaxis, localised, timeLimited, outlier, samplingFreq);
         this.remove(graphPanel);
         graphPanel = graphNew;
         //Adds new graph

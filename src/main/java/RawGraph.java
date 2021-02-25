@@ -4,12 +4,16 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class DynamicGraph extends JPanel {
-    private static final int PREF_W = 500;
-    private static final int PREF_H = 500;
+public class RawGraph extends JPanel {
+    private static final int PREF_W = 600;
+    private static final int PREF_H = 600;
     private static final int BORDER_GAP = 80;
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
@@ -17,7 +21,7 @@ public class DynamicGraph extends JPanel {
     private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
     private static final int GRAPH_POINT_WIDTH = 6;
 
-    private static final int SAMPLING_FREQUENCY = 4;
+    private int samplingFreq;
     private int TIME_LIMIT;
     private List<Integer> scores;
     private boolean localised;
@@ -41,11 +45,12 @@ public class DynamicGraph extends JPanel {
     int[] outliers;
     private boolean[] outlierBool;
 
-    public DynamicGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits) {
-        this.setBorder(BorderFactory.createMatteBorder(1,1,0,1,Color.black));
+    public RawGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits, int samplingFreq) {
+        this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
+        this.samplingFreq=samplingFreq;
         scores = data;
         this.localised = localised;
-        TIME_LIMIT = timeLimit*SAMPLING_FREQUENCY;
+        TIME_LIMIT = timeLimit*samplingFreq;
         this.title = title;
         this.yaxis=yaxis;
         this.xaxis=xaxis;
@@ -88,6 +93,9 @@ public class DynamicGraph extends JPanel {
             int x = graphPoints.get(i).x - GRAPH_POINT_WIDTH / 2;
             if(outlierBool[i]){
                 g2.setColor(OUTLIER_POINT_COLOR);
+                if(i==graphPoints.size()-1){
+                    makeNoise();
+                }
             }
             int y = graphPoints.get(i).y - GRAPH_POINT_WIDTH / 2;;
             int ovalW = GRAPH_POINT_WIDTH;
@@ -214,7 +222,7 @@ public class DynamicGraph extends JPanel {
             DecimalFormat df = new DecimalFormat("#.#");
 
             g2.drawLine(x0, y0, x0, y1);
-            g2.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/SAMPLING_FREQUENCY)), x0 - 5, getHeight() - BORDER_GAP + 20);
+            g2.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/samplingFreq)), x0 - 5, getHeight() - BORDER_GAP + 20);
             g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
         }
     }
@@ -248,6 +256,27 @@ public class DynamicGraph extends JPanel {
         g2.drawString(xaxis, xAxisX, xAxisY);
         g2.setFont(rotatedFont);
         g2.drawString(yaxis, yAxisX, yAxisY);
+    }
+
+    void makeNoise() {
+        byte[] buf = new byte[ 1 ];;
+        AudioFormat af = new AudioFormat( (float )44100, 8, 1, true, false );
+        SourceDataLine sdl = null;
+        try {
+            sdl = AudioSystem.getSourceDataLine( af );
+            sdl.open();
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+        }
+        assert sdl != null;
+        sdl.start();
+        for( int i = 0; i < 1000 * (float )44100 / 1000; i++ ) {
+            double angle = i / ( (float )44100 / 440 ) * 2.0 * Math.PI;
+            buf[ 0 ] = (byte )( Math.sin( angle ) * 100 );
+            sdl.write( buf, 0, 1 );
+        }
+        sdl.drain();
+        sdl.stop();
     }
 
 }

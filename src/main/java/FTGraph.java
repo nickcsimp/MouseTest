@@ -8,8 +8,8 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class FTGraph extends JPanel {
-    private static final int PREF_W = 500;
-    private static final int PREF_H = 500;
+    private static final int PREF_W = 600;
+    private static final int PREF_H = 600;
     private static final int BORDER_GAP = 80;
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
@@ -35,14 +35,16 @@ public class FTGraph extends JPanel {
     double xMin;
     double xMax;
     double samplingFreq;
+    int sampleCount;
 
-    public FTGraph(double[] data, double samplingFreq) {
+    public FTGraph(double[] data, FTControls ftControls) {
         this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
         scores = data;
         this.title = "Fourier Transform";
         this.yaxis="AU";
         this.xaxis="Frequency";
-        this.samplingFreq=samplingFreq;
+        this.samplingFreq=ftControls.getSampleFreq();
+        this.sampleCount=ftControls.getSampleCount();
     }
 
 
