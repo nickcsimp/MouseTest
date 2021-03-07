@@ -9,6 +9,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
+import org.apache.commons.lang3.ArrayUtils;
 
 @SuppressWarnings("serial")
 public class RawGraph extends JPanel {
@@ -18,7 +19,7 @@ public class RawGraph extends JPanel {
     private static final Color GRAPH_COLOR = Color.BLACK;
     private static final Color GRAPH_POINT_COLOR = new Color(50, 50, 50, 180);
     private static final Color OUTLIER_POINT_COLOR = new Color(255, 0, 0, 180);
-    private static final Stroke GRAPH_STROKE = new BasicStroke(1f);
+    private static final Stroke GRAPH_STROKE = new BasicStroke(3f);
     private static final int GRAPH_POINT_WIDTH = 6;
 
     private int samplingFreq;
@@ -63,6 +64,7 @@ public class RawGraph extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
+        Graphics2D g3 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphWidth = getWidth()- BORDER_GAP * 2;
         graphHeight = getHeight()- BORDER_GAP * 2;
@@ -71,8 +73,8 @@ public class RawGraph extends JPanel {
         outlierBool = new boolean[1+maximumX-minimumX];
         List<Point> graphPoints = getPoints();
 
-        yAxis(g2);
-        xAxis(g2);
+        yAxis(g2, g3);
+        xAxis(g2, g3);
         labels(g2);
 
         Stroke oldStroke = g2.getStroke();
@@ -197,7 +199,7 @@ public class RawGraph extends JPanel {
         hatchSizeY=yScale/10;
     }
 
-    private void yAxis(Graphics2D g2){
+    private void yAxis(Graphics2D g2, Graphics g3){
         for (int i = 0; i < 11; i++) {
             int x0 = BORDER_GAP;
             int x1 = GRAPH_POINT_WIDTH + BORDER_GAP;
@@ -205,13 +207,15 @@ public class RawGraph extends JPanel {
             int division = graphHeight/10;
             int y0 = getHeight()-BORDER_GAP-i*division;
 
+            g2.setColor(new Color(95, 95, 95));
             g2.drawLine(x0, y0, x1, y0);
-            g2.drawString(String.valueOf((hatchSizeY*i)+yMin), BORDER_GAP-30, y0+5);
             g2.drawLine(BORDER_GAP, y0, getWidth()-BORDER_GAP, y0);
+            g3.setColor(new Color(0, 0, 0));
+            g3.drawString(String.valueOf((hatchSizeY*i)+yMin), BORDER_GAP-30, y0+5);
         }
     }
 
-    private void xAxis(Graphics2D g2){
+    private void xAxis(Graphics2D g2, Graphics2D g3){
         for (int i = 0; i < 11; i++) {
             int y0 = getHeight()-BORDER_GAP;
             int y1 = y0-GRAPH_POINT_WIDTH;
@@ -221,13 +225,18 @@ public class RawGraph extends JPanel {
 
             DecimalFormat df = new DecimalFormat("#.#");
 
-            g2.drawLine(x0, y0, x0, y1);
-            g2.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/samplingFreq)), x0 - 5, getHeight() - BORDER_GAP + 20);
+            g2.setColor(new Color(95, 95, 95)); //sets color for axis lines (slightly lighter so signal is easy to see)
             g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
+            g3.setColor(new Color(0, 0, 0)); //sets color for numbers in the axis
+            g3.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/samplingFreq)), x0 - 5, getHeight() - BORDER_GAP + 20);
+
+
         }
+        xMin = ((hatchSizeX * 11)+xMin)/samplingFreq;
     }
 
     private void labels(Graphics2D g2){
+        g2.setColor(new Color(0, 0, 0));
         //Transformation that rotates text
         AffineTransform affineTransform = new AffineTransform();
         affineTransform.rotate(Math.toRadians(-90), 0, 0);

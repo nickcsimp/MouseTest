@@ -2,9 +2,7 @@ import com.fazecast.jSerialComm.SerialPort;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 
 public class DataRetrieval extends Thread{
@@ -17,28 +15,28 @@ public class DataRetrieval extends Thread{
     GridBagConstraints c;
     int samplingFreq;
     boolean finished;
-    FTControls ftControls;
+    SidePanel sidePanel;
 
-    public DataRetrieval(FTControls ftControls, ArrayList<Integer> data, SerialPort sp, GraphControls c, JFrame frame, RawGraph rawGraph, GridBagConstraints cs, int display){
+    public DataRetrieval(ArrayList<Integer> data, SerialPort sp, GraphControls c, JFrame frame, RawGraph rawGraph, GridBagConstraints cs, int display, SidePanel sidePanel){
         this.data=data;
         this.sp = sp;
         rawControls=c;
         this.frame=frame;
         this.c = cs;
-        this. rawGraph = rawGraph;
+        this.rawGraph = rawGraph;
         this.display = display;
-        this.samplingFreq=ftControls.getSampleFreq();
+        this.samplingFreq=4;
         finished=false;
-        this.ftControls = ftControls;
+        this.sidePanel=sidePanel;
     }
 
     public void run(){
         while(!finished) {
-            this.samplingFreq=ftControls.getSampleFreq();
+            this.samplingFreq=4;
             long startTime = System.nanoTime();
             int input = 0;
             try {
-                input = Integer.parseInt(getData());
+                input = getData();
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (NumberFormatException e){
@@ -55,6 +53,7 @@ public class DataRetrieval extends Thread{
             long endTime = System.nanoTime();
 
             long timeElapsed = endTime - startTime;
+            System.out.println("Time elapsed: " + timeElapsed);
             int sleepTime = 0;
             if(((1000/samplingFreq)-timeElapsed/1000000)>0){
                 sleepTime=(int)((1000/samplingFreq)-timeElapsed/1000000);
@@ -66,6 +65,7 @@ public class DataRetrieval extends Thread{
                 finished=true;
                 return;
             }
+            sidePanel.updatePanel();
         }
     }
 
@@ -74,21 +74,23 @@ public class DataRetrieval extends Thread{
     }
 
     // I got this from https://stackoverflow.com/questions/16608878/read-data-from-a-java-socket
-    private String getData() throws IOException {
+    private Integer getData() throws IOException {
         BufferedReader bis = new BufferedReader(new InputStreamReader(sp.getInputStream()));
-        String inputLine=new String(); // temporally stores the new number from the port
+        Integer inputLine=0; // temporally stores the new number from the port
         sp.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
 
-        while (bis.ready ())
+        while (bis.ready())
         {
-            inputLine=bis.readLine();
+            inputLine=Integer.parseInt(bis.readLine());
+            System.out.println(inputLine);
         }
         return inputLine;
     }
 
     public void updateGraph(){
         frame.remove(rawGraph);
-        RawGraph newGraph = new RawGraph(data, "Raw Piezo Output", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers(), samplingFreq);
+        RawGraph newGraph = new RawGraph(data, "Mouse Respiratory Rate", "Piezo Output", "Time", rawControls.getLocalised(), rawControls.getTimeLimit(), rawControls.getOutliers(), samplingFreq);
+        //newGraph.addAxis(freq4);
         rawGraph=newGraph;
         frame.add(rawGraph, c);
         frame.revalidate();
@@ -100,7 +102,7 @@ public class DataRetrieval extends Thread{
     }
 
     public double[] getFTInput(){
-        int sampleCount = ftControls.getSampleCount();
+        int sampleCount = 4;
         double[] output = new double[sampleCount];
         double count = 0;
         if (data.size() > sampleCount) {
