@@ -65,6 +65,8 @@ public class DataRetrieval extends Thread{
                 finished=true;
                 return;
             }
+            sidePanel.setCurrent(input);
+            sidePanel.setAverage(average());
             sidePanel.updatePanel();
         }
     }
@@ -125,5 +127,12 @@ public class DataRetrieval extends Thread{
         return output;
     }
 
+    public int average(){
+        int count=0;
+        for(Integer i:data){
+            count+=i;
+        }
+        return count/data.size();
+    }
 
 }
