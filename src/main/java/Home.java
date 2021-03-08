@@ -40,8 +40,6 @@ public class Home {
         GridBagConstraints confirmSettings = gridConstraints(0,3,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
         GridBagConstraints panelSettings = gridConstraints(8,0,2,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
 
-
-        System.out.println(System.getProperty("user.dir"));
         GraphControls homeControls = new GraphControls();
         SidePanel sidePanel = new SidePanel();
 
@@ -59,6 +57,7 @@ public class Home {
 
         JLabel isoTitle = new JLabel("Edit Isoflurane:");
         JTextField iso = new JTextField();
+        iso.setColumns(3);
         JButton confirmButt = new JButton("Confirm");
 
         JButton setButt = new JButton("Pause");
