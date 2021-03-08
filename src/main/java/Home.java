@@ -29,24 +29,53 @@ public class Home {
         data = new ArrayList<>();
         processedData = new ArrayList<>();
         FTdata=new double[40];//TODO
-        GridBagConstraints pauseSettings = gridConstraints(6,9,2,3,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHEAST);
-        GridBagConstraints startSettings = gridConstraints(8,9,2,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTHEAST);
-        GridBagConstraints graphSettings = gridConstraints(0,2,10,6,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-        GridBagConstraints controlsSettings = gridConstraints(0,9,6,1,0.5,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-        GridBagConstraints rightPanelC = gridConstraints(4,0,10,2,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        GridBagConstraints pauseSettings = gridConstraints(8,9,1,1,0.25,0.0,GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
+        GridBagConstraints startSettings = gridConstraints(9,9,1,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
+        GridBagConstraints graphSettings = gridConstraints(0,1,10,6,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+        GridBagConstraints controlsSettings = gridConstraints(0,9,8,1,0.5,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
+        GridBagConstraints dataSettings = gridConstraints(0,0,8,3,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
 
+        GridBagConstraints titleSettings = gridConstraints(0,1,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        GridBagConstraints isoSettings = gridConstraints(0,2,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        GridBagConstraints confirmSettings = gridConstraints(0,3,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        GridBagConstraints panelSettings = gridConstraints(8,0,2,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+
+
+        System.out.println(System.getProperty("user.dir"));
         GraphControls homeControls = new GraphControls();
         SidePanel sidePanel = new SidePanel();
 
         RawGraph procGraph = new RawGraph(processedData, "Mouse Respiratory Rate", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers(), 1);
 
+        // create Log to save isoflurane concentration data
+        Log log = null;
+        try{
+            log = new Log();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JLabel isoTitle = new JLabel("Edit Isoflurane:");
+        JTextField iso = new JTextField();
+        JButton confirmButt = new JButton("Confirm");
+
         JButton setButt = new JButton("Pause");
+        setButt.setFont(new Font(null, Font.PLAIN, 25));
         JButton startStopButt = new JButton("Start");
+        startStopButt.setFont(new Font(null, Font.PLAIN, 25));
+
+        JPanel isoPanel = new JPanel();
+        isoPanel.add(isoTitle, titleSettings);
+        isoPanel.add(iso, isoSettings);
+        isoPanel.add(confirmButt, confirmSettings);
 
         frame.add(setButt, pauseSettings);
         frame.add(procGraph, graphSettings);
         frame.add(homeControls, controlsSettings);
-        frame.add(sidePanel, rightPanelC);
+        frame.add(sidePanel, dataSettings);
+        frame.add(isoPanel, panelSettings);
         JButton loading = new JButton("Finding Arduino...");
         frame.add(loading, startSettings);
         while(sp==null) {
@@ -90,6 +119,17 @@ public class Home {
                 setButt.setText("Pause");
                 display = tempdisplay;
                 dataRetrieval.setDisplay(display);
+            }
+        });
+
+        Log finalLog = log;
+        confirmButt.addActionListener(evt->{
+            try{
+                finalLog.addPoint(iso.getText());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         });
 
