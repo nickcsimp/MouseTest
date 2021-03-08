@@ -124,7 +124,7 @@ public class Home {
         Log finalLog = log;
         confirmButt.addActionListener(evt->{
             try{
-                finalLog.addPoint(iso.getText());
+                finalLog.addPoint(iso.getText(), sidePanel.getAverage(), sidePanel.getCurrent());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IOException e) {

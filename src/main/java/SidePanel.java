@@ -44,4 +44,8 @@ public class SidePanel extends JPanel {
     public int getFilterLength(){
         return filterLength;
     }
+
+    public int getAverage(){ return this.Average; }
+
+    public int getCurrent(){ return this.Current; }
 }

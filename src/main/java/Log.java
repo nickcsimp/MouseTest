@@ -13,7 +13,7 @@ public class Log {
 
     public Log() throws InterruptedException, IOException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM");
-        log = new File(System.getProperty("user.dir")+"/Mouse Log"+LocalDateTime.now() +".txt");
+        log = new File(System.getProperty("user.dir")+"/Mouse Log" +".txt");
         if(log.createNewFile()) {
             System.out.println("File created: " + log.getName());
         }
@@ -21,10 +21,10 @@ public class Log {
     }
 
     //adds a line with the RR at some point in time
-    public void addPoint(String isoChange) throws InterruptedException, IOException{
+    public void addPoint(String isoChange, int average, int current) throws InterruptedException, IOException{
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
         FileWriter myWriter = new FileWriter(log.getName());
-        myWriter.write(LocalDateTime.now().format(dtf)+"\t"+"Change of isoflurane: "+isoChange);
+        myWriter.write(LocalDateTime.now().format(dtf)+"\t"+"Change of isoflurane: "+isoChange+"\t"+"Current RR: "+current+"\t"+"Average RR: "+average);
         myWriter.close();
     }
 
