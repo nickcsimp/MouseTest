@@ -60,24 +60,31 @@ public class RawGraph extends JPanel {
 
     //TODO think about sampling frequency
 
+    //This is the bulk
+    //TODO would be nice to edit current graph rather than make a new one but might be a lot of effort
     @Override
     protected void paintComponent(Graphics g) {
+        //Setup
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
         Graphics2D g3 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        //Uses frame dimensions to find how big the graph will be
         graphWidth = getWidth()- BORDER_GAP * 2;
         graphHeight = getHeight()- BORDER_GAP * 2;
 
-        doGraphSizes();
-        outlierBool = new boolean[1+maximumX-minimumX];
-        List<Point> graphPoints = getPoints();
+        doGraphSizes();//Finds necessary dimensions
+        outlierBool = new boolean[1+maximumX-minimumX]; //instantiates outlier array
+        List<Point> graphPoints = getPoints(); //Calculates x and y coordinates
 
-        yAxis(g2, g3);
-        xAxis(g2, g3);
-        labels(g2);
+        yAxis(g2, g3); //Draws the yaxis
+        xAxis(g2, g3); //Draws the xaxis
+        labels(g2); //Draws the words
 
-        Stroke oldStroke = g2.getStroke();
+        Stroke oldStroke = g2.getStroke(); //Saves current stroke (How the thing gets drawn)
+
+        //Draws all lines between points
         g2.setColor(GRAPH_COLOR);
         g2.setStroke(GRAPH_STROKE);
         for (int i = 0; i < graphPoints.size() - 1; i++) {
@@ -89,22 +96,23 @@ public class RawGraph extends JPanel {
         }
 
         // sets the points in the line ( -----o-------o-------)
-        g2.setStroke(oldStroke);
+        g2.setStroke(oldStroke); //Sets stroke back to how it was
         g2.setColor(GRAPH_POINT_COLOR);
+        //Draws all points
         for (int i = 0; i < graphPoints.size(); i++) {
-            int x = graphPoints.get(i).x - GRAPH_POINT_WIDTH / 2;
-            if(outlierBool[i]){
+            int x = graphPoints.get(i).x - GRAPH_POINT_WIDTH / 2; //Moves the x coordinate by the graph point width
+            if(outlierBool[i]){ //If there is an outlier, paint it red
                 g2.setColor(OUTLIER_POINT_COLOR);
-                if(i==graphPoints.size()-1){
+                if(i==graphPoints.size()-1){ //If the outlier is the most recent one then alert the user
                     makeNoise();
                 }
             }
-            int y = graphPoints.get(i).y - GRAPH_POINT_WIDTH / 2;;
-            int ovalW = GRAPH_POINT_WIDTH;
-            int ovalH = GRAPH_POINT_WIDTH;
-            g2.fillOval(x, y, ovalW, ovalH);
+            int y = graphPoints.get(i).y - GRAPH_POINT_WIDTH / 2;; //Moves the y coordinate by the graph point width
+            int ovalW = GRAPH_POINT_WIDTH; //Sets oval width
+            int ovalH = GRAPH_POINT_WIDTH; //Sets oval height
+            g2.fillOval(x, y, ovalW, ovalH); //Draws it
             if(outlierBool[i]){
-                g2.setColor(GRAPH_POINT_COLOR);
+                g2.setColor(GRAPH_POINT_COLOR); //Changes it back to normal if red was used
             }
         }
     }
@@ -125,6 +133,7 @@ public class RawGraph extends JPanel {
     }
 
 
+    //Finds the maximum number in the data to set the y axis maximum
     public int maximum(List<Integer> list, int upper, int lower){
         Integer output = 0;
         for(int i=lower; i<=upper; i++) {
@@ -135,8 +144,9 @@ public class RawGraph extends JPanel {
         return output;
     }
 
+    //Finds the minimum number in the data to set the y axis minimnum
     public int minimum(List<Integer> list, int upper, int lower){
-        Integer output = maximum(list, upper, lower);
+        Integer output = maximum(list, upper, lower); //Uses max as a limit instead of eg. 1000000
         for(int i=lower; i<=upper; i++){
             if(list.get(i)<output){
                 output=list.get(i);
@@ -145,17 +155,21 @@ public class RawGraph extends JPanel {
         return output;
     }
 
+    //Does some maths on the screen dimensions to find where each point should go on the graph
     private List<Point> getPoints(){
         List<Point> graphPoints = new ArrayList<>();
         if(maximumX<TIME_LIMIT) {
             for (int i = 0; i <= maximumX; i++) {
-                outlierBool[i]=isOutlier(scores.get(minimumX+i));
+                outlierBool[i]=isOutlier(scores.get(minimumX+i));//Highlights points that should be red
+                //x values depend on screen size, border size and number of points to plot
                 int x1 = ((i * graphWidth / xScale) + BORDER_GAP);
+
+                //y values depend on screen size, border size and difference between max and min y values
                 int y1 = (graphHeight + BORDER_GAP) - ((scores.get(minimumX+i)-yMin) * graphHeight) / yScale;
                 graphPoints.add(new Point(x1, y1));
             }
         } else {//TODO two identical loops!
-            for (int i = 0; i <= TIME_LIMIT; i++) {
+            for (int i = 0; i <= TIME_LIMIT; i++) { //This repeats but for some reason wouldnt work if it wasnt here?
                 outlierBool[i]=isOutlier(scores.get(minimumX+i));
                 int x1 = ((i * graphWidth / xScale) + BORDER_GAP);
                 int y1 = (graphHeight + BORDER_GAP) - ((scores.get(minimumX+i)-yMin) * graphHeight) / yScale;
@@ -165,6 +179,7 @@ public class RawGraph extends JPanel {
         return graphPoints;
     }
 
+    //Determines if a point lies outside of the designated acceptable region
     private boolean isOutlier(int i){
         if(i<outliers[1] || i>outliers[0]){
             return true;
@@ -172,49 +187,53 @@ public class RawGraph extends JPanel {
         return false;
     }
 
+    //This uses the screen dimensions to find where points can be put
     private void doGraphSizes(){
-        maximumX= scores.size()-1;
-        minimumX =0;
-        if(maximumX<TIME_LIMIT){
-            xMin = 0;
-            xMax = (((maximumX-1) / 10) + 1) * 10;
+        maximumX= scores.size()-1; //Number of points that can be plotted
+        minimumX =0; //Assumes a minimum of 0
+        if(maximumX<TIME_LIMIT){ //Time limit is the user defined x axis size
+            xMin = 0; //if we have fewer points than the user designates then we start from the first value in data
+            xMax = (((maximumX-1) / 10) + 1) * 10; //This puts the rhs of the x axis at the next 10 seconds
         }
         else{
-            minimumX=maximumX-TIME_LIMIT;
+            minimumX=maximumX-TIME_LIMIT; //Minimum x value leaves only the user defined number of points on the graph
             xMin = minimumX;
             xMax = maximumX;
         }
 
-        xScale = xMax-xMin;
-        hatchSizeX = xScale/10;
+        xScale = xMax-xMin; //The scale is the difference between the max and the min - used for plotting points
+        hatchSizeX = xScale/10; //Hatch is where the lines are drawn on the graph
 
-        maximumY= maximum(scores, maximumX, minimumX);
-        minimumY = 0;
+        maximumY= maximum(scores, maximumX, minimumX); //Finds the maximum y value
+        minimumY = 0; //Assumes a minimum of 0
         if(localised){
-            minimumY= minimum(scores, maximumX, minimumX );
+            minimumY= minimum(scores, maximumX, minimumX ); //If we are focusing on where the points are then the minimum value is found
         }
-        yMin = (minimumY/10)*10;
-        yMax = ((maximumY/10)+1)*10;
-        yScale=yMax-yMin;
-        hatchSizeY=yScale/10;
+        yMin = (minimumY/10)*10; //Rounds down to nearest integer value
+        yMax = ((maximumY/10)+1)*10; //Rounds up to nearest integer
+        yScale=yMax-yMin; //Scales the graph
+        hatchSizeY=yScale/10; //Where the gridlines sit
     }
 
+    //Draws the yaxis
     private void yAxis(Graphics2D g2, Graphics g3){
-        for (int i = 0; i < 11; i++) {
-            int x0 = BORDER_GAP;
+        //TODO not all in loop
+        for (int i = 0; i < 11; i++) { //Draws 10 lines
+            int x0 = BORDER_GAP; //
             int x1 = GRAPH_POINT_WIDTH + BORDER_GAP;
 
             int division = graphHeight/10;
             int y0 = getHeight()-BORDER_GAP-i*division;
 
             g2.setColor(new Color(95, 95, 95));
-            g2.drawLine(x0, y0, x1, y0);
-            g2.drawLine(BORDER_GAP, y0, getWidth()-BORDER_GAP, y0);
+            g2.drawLine(x0, y0, x1, y0); //Not sure tbh
+            g2.drawLine(BORDER_GAP, y0, getWidth()-BORDER_GAP, y0); //Draws the line from x_0 to x_n
             g3.setColor(new Color(0, 0, 0));
-            g3.drawString(String.valueOf((hatchSizeY*i)+yMin), BORDER_GAP-30, y0+5);
+            g3.drawString(String.valueOf((hatchSizeY*i)+yMin), BORDER_GAP-30, y0+5); //Writes the number on the x axis
         }
     }
 
+    //Draws xaxis
     private void xAxis(Graphics2D g2, Graphics2D g3){
         for (int i = 0; i < 11; i++) {
             int y0 = getHeight()-BORDER_GAP;
@@ -223,11 +242,12 @@ public class RawGraph extends JPanel {
             int division = graphWidth/10;
             int x0 = BORDER_GAP+i*division;
 
-            DecimalFormat df = new DecimalFormat("#.#");
+            DecimalFormat df = new DecimalFormat("#.#"); //Formats the x axis numbers
 
             g2.setColor(new Color(95, 95, 95)); //sets color for axis lines (slightly lighter so signal is easy to see)
-            g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP);
+            g2.drawLine(x0, getHeight() - BORDER_GAP, x0, BORDER_GAP); //Draws the gridline
             g3.setColor(new Color(0, 0, 0)); //sets color for numbers in the axis
+            //Writes the numbers on the axis
             g3.drawString(String.valueOf(df.format((double)((hatchSizeX * i)+xMin)/samplingFreq)), x0 - 5, getHeight() - BORDER_GAP + 20);
 
 
@@ -235,6 +255,7 @@ public class RawGraph extends JPanel {
         xMin = ((hatchSizeX * 11)+xMin)/samplingFreq;
     }
 
+    //Writes the title and axis titles
     private void labels(Graphics2D g2){
         g2.setColor(new Color(0, 0, 0));
         //Transformation that rotates text
@@ -267,7 +288,11 @@ public class RawGraph extends JPanel {
         g2.drawString(yaxis, yAxisX, yAxisY);
     }
 
+    //Alerts the user
+    //TODO this is horrible noise
+    //TODO add in visuals such as vring to front of screen
     void makeNoise() {
+        //Copied from online so feel free to edit
         byte[] buf = new byte[ 1 ];;
         AudioFormat af = new AudioFormat( (float )44100, 8, 1, true, false );
         SourceDataLine sdl = null;

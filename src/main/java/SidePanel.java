@@ -17,6 +17,7 @@ public class SidePanel extends JPanel {
         c.gridy=0;
 
 //        Font font = new Font("Verdana", Font.BOLD, 24);
+        //Automatically has the words but obvs no data is there yet
         Font font = new Font(null, Font.PLAIN, 30);
         average = new JLabel("Average BPM: ");
         current = new JLabel("Current BPM: ");
@@ -26,6 +27,7 @@ public class SidePanel extends JPanel {
         c.gridy=1;
         this.add(current, c);
     }
+    //Updates the words with the correct data
     public void updatePanel(){
         average.setText("Average BPM: "+Average);
         current.setText("Current BPM: "+Current);
@@ -33,6 +35,7 @@ public class SidePanel extends JPanel {
         repaint();
     }
 
+    //data retrieval calculates and update the average and the current
     public void setAverage(int ave){
         Average=ave;
         updatePanel();
