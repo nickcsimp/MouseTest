@@ -1,19 +1,18 @@
-import com.fazecast.jSerialComm.SerialPort;
-
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class Home {
     ArrayList<Integer> data;
     ArrayList<Integer> processedData;
     double[] FTdata;
-    private static SerialPort sp;
     int display;
     int tempdisplay;
 
+    private final DataRetriever dataRetriever;
+
     public Home(){
+
         int samplingFreq=4;//TODO settings
 
         display=0; //Used for changing screens and pausing
@@ -57,33 +56,26 @@ public class Home {
         frame.add(sidePanel, rightPanelC);
         JButton loading = new JButton("Finding Arduino...");
         frame.add(loading, startSettings);
-        while(sp==null) {
-            try {
-                arduino(); //Search for the arduino until one is found
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+
+        dataRetriever = new DataRetriever(data, null, homeControls, frame, procGraph, graphSettings, display, sidePanel);
+        PortSelector portSelector = new PortSelector(frame, dataRetriever);
+        portSelector.selectInput();
+
         frame.remove(loading); //When one is found we remove the loading sign
         frame.add(startStopButt, startSettings); //Add the buttons
         frame.revalidate(); //Repaint so that things show up
         frame.repaint();
 
-        //Dataretrieval gets the info from the arduino
-        DataRetrieval dataRetrieval = new DataRetrieval(data, sp, homeControls, frame, procGraph, graphSettings, display, sidePanel);
-
         //This changes the start button to stop, then to restart
         startStopButt.addActionListener(evt->{
             if(startStopButt.getText().equals("Start")) {
                 startStopButt.setText("Stop");
-                dataRetrieval.start();
+                dataRetriever.start();
                 display=1;
-                dataRetrieval.setDisplay(display);
+                dataRetriever.setDisplay(display);
             } else if(startStopButt.getText().equals("Stop")) {
                 startStopButt.setText("Restart");
-                dataRetrieval.interrupt();
+                dataRetriever.interrupt();
             } else {
                 frame.dispose();
                 Home home = new Home(); //When restart is pressed the whole app refreshes
@@ -96,11 +88,11 @@ public class Home {
                 tempdisplay=display;
                 setButt.setText("Resume");
                 display = 2;
-                dataRetrieval.setDisplay(display);
+                dataRetriever.setDisplay(display);
             } else {
                 setButt.setText("Pause");
                 display = tempdisplay;
-                dataRetrieval.setDisplay(display);
+                dataRetriever.setDisplay(display);
             }
         });
 
@@ -118,23 +110,6 @@ public class Home {
         c.fill=fill;
         c.anchor=anchor;
         return c;
-    }
-
-    //Finds and connects to the arduino
-    public static void arduino() throws InterruptedException, IOException {
-        for (SerialPort s : SerialPort.getCommPorts()) //iterate through all the ports
-        {
-            String PortName = s.getSystemPortName();
-            if(PortName.length() > 12) {
-                if(PortName.substring(0, 12).equals("tty.usbmodem")){
-                    System.out.println("Found port :)");
-                    sp = s;
-                    sp.setComPortParameters(9600, 8, 1, 0);
-                    sp.openPort();
-                    break;
-                }
-            }
-        }
     }
 
 }

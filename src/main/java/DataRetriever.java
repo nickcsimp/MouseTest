@@ -5,8 +5,8 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 
-public class DataRetrieval extends Thread{
-    SerialPort sp;
+public class DataRetriever extends Thread {
+    private SerialPort sp;
     ArrayList<Integer> data;
     GraphControls rawControls;
     JFrame frame;
@@ -17,7 +17,7 @@ public class DataRetrieval extends Thread{
     boolean finished;
     SidePanel sidePanel;
 
-    public DataRetrieval(ArrayList<Integer> data, SerialPort sp, GraphControls c, JFrame frame, RawGraph rawGraph, GridBagConstraints cs, int display, SidePanel sidePanel){
+    public DataRetriever(ArrayList<Integer> data, SerialPort sp, GraphControls c, JFrame frame, RawGraph rawGraph, GridBagConstraints cs, int display, SidePanel sidePanel){
         this.data=data;
         this.sp = sp;
         rawControls=c;
@@ -28,6 +28,14 @@ public class DataRetrieval extends Thread{
         this.samplingFreq=4;
         finished=false;
         this.sidePanel=sidePanel;
+    }
+
+    public SerialPort getSerialPort() {
+        return sp;
+    }
+
+    public void setSerialPort(SerialPort sp) {
+        this.sp = sp;
     }
 
     public void run(){
