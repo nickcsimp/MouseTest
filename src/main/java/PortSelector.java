@@ -16,7 +16,7 @@ public class PortSelector {
         this.parent = parent;
     }
 
-    private void openPort(SerialPort port) throws IOException, InterruptedException {
+    private void openPort(SerialPort port) {
         port.setComPortParameters(9600, 8, 1, 0);
         port.openPort();
     }
