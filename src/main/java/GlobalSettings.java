@@ -1,5 +1,5 @@
-// A singleton enum that stores the app settings
-// To retrieve this enum you use Settings.INSTANCE.getInstance()
+// A Singleton enum that stores the app settings
+// To get a setting you go GlobalSettings.INSTANCE.getSamplingFrequency() (or getWhateverOtherSetting())
 public enum GlobalSettings {
 
     INSTANCE(4);
