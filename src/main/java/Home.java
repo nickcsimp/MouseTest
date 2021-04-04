@@ -1,23 +1,23 @@
-import com.fazecast.jSerialComm.SerialPort;
-
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class Home {
+
     ArrayList<Integer> data;
     ArrayList<Integer> processedData;
     double[] FTdata;
-    private static SerialPort sp;
     int display;
     int tempdisplay;
 
-    public Home(){
-        int samplingFreq=4;//TODO settings
+    private final DataRetriever dataRetriever;
 
-        display=0;
+    public Home(){
+
+        display=0; // Used for changing screens and pausing
         tempdisplay=0;
+
+        // Opens frame and sets settings
         JFrame frame = new JFrame("Mousify");
         frame.setExtendedState(Frame.MAXIMIZED_BOTH);
         frame.setLayout(new GridBagLayout());
@@ -26,115 +26,78 @@ public class Home {
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
 
-        data = new ArrayList<>();
-        processedData = new ArrayList<>();
-        FTdata=new double[40];//TODO
-        GridBagConstraints pauseSettings = gridConstraints(8,9,1,1,0.25,0.0,GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
-        GridBagConstraints startSettings = gridConstraints(9,9,1,1,0.25,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.CENTER);
-        GridBagConstraints graphSettings = gridConstraints(0,1,10,6,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-        GridBagConstraints controlsSettings = gridConstraints(0,9,8,1,0.5,0.1,GridBagConstraints.HORIZONTAL, GridBagConstraints.WEST);
-        GridBagConstraints dataSettings = gridConstraints(0,0,8,3,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        data = new ArrayList<>();// Raw data contained here
+        processedData = new ArrayList<>(); // Processed data here
+        FTdata=new double[40];// TODO Unsure if needed still
 
-        GridBagConstraints titleSettings = gridConstraints(0,1,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
-        GridBagConstraints isoSettings = gridConstraints(0,2,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
-        GridBagConstraints confirmSettings = gridConstraints(0,3,1,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
-        GridBagConstraints panelSettings = gridConstraints(8,0,2,1,0.5,0.8,GridBagConstraints.HORIZONTAL, GridBagConstraints.EAST);
+        // Sets gridbag constraints for various panels
+        GridBagConstraints pauseSettings = gridConstraints(6,9,2,3,0.25,0.1, GridBagConstraints.NORTHEAST);
+        GridBagConstraints startSettings = gridConstraints(8,9,2,1,0.25,0.1, GridBagConstraints.NORTHEAST);
+        GridBagConstraints graphSettings = gridConstraints(0,2,10,6,0.5,0.8, GridBagConstraints.WEST);
+        GridBagConstraints controlsSettings = gridConstraints(0,9,6,1,0.5,0.1, GridBagConstraints.WEST);
+        GridBagConstraints rightPanelC = gridConstraints(4,0,10,2,0.5,0.8, GridBagConstraints.EAST);
 
+        // Instantiate the graph controls and 'Sidepanel'
         GraphControls homeControls = new GraphControls();
         SidePanel sidePanel = new SidePanel();
 
+        // Instantiates the graph
         RawGraph procGraph = new RawGraph(processedData, "Mouse Respiratory Rate", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers(), 1);
 
-        // create Log to save isoflurane concentration data
-        Log log = null;
-        try{
-            log = new Log();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        JLabel isoTitle = new JLabel("Edit Isoflurane:");
-        JTextField iso = new JTextField();
-        iso.setColumns(3);
-        JButton confirmButt = new JButton("Confirm");
-
+        // Creates start stop pause buttons
         JButton setButt = new JButton("Pause");
-        setButt.setFont(new Font(null, Font.PLAIN, 25));
         JButton startStopButt = new JButton("Start");
-        startStopButt.setFont(new Font(null, Font.PLAIN, 25));
 
-        JPanel isoPanel = new JPanel();
-        isoPanel.add(isoTitle, titleSettings);
-        isoPanel.add(iso, isoSettings);
-        isoPanel.add(confirmButt, confirmSettings);
-
+        // Adds everything to frame
         frame.add(setButt, pauseSettings);
         frame.add(procGraph, graphSettings);
         frame.add(homeControls, controlsSettings);
-        frame.add(sidePanel, dataSettings);
-        frame.add(isoPanel, panelSettings);
+        frame.add(sidePanel, rightPanelC);
         JButton loading = new JButton("Finding Arduino...");
         frame.add(loading, startSettings);
-        while(sp==null) {
-            try {
-                arduino();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        frame.remove(loading);
-        frame.add(startStopButt, startSettings);
-        frame.revalidate();
+
+        dataRetriever = new DataRetriever(data, null, homeControls, frame, procGraph, graphSettings, display, sidePanel);
+        PortSelector portSelector = new PortSelector(frame, dataRetriever);
+        portSelector.selectInput();
+
+        frame.remove(loading); // When one is found we remove the loading sign
+        frame.add(startStopButt, startSettings); // Add the buttons
+        frame.revalidate(); // Repaint so that things show up
         frame.repaint();
 
-        DataRetrieval dataRetrieval = new DataRetrieval(data, sp, homeControls, frame, procGraph, graphSettings, display, sidePanel);
-
+        // This changes the start button to stop, then to restart
         startStopButt.addActionListener(evt->{
             if(startStopButt.getText().equals("Start")) {
                 startStopButt.setText("Stop");
-                dataRetrieval.start();
+                dataRetriever.start();
                 display=1;
-                dataRetrieval.setDisplay(display);
+                dataRetriever.setDisplay(display);
             } else if(startStopButt.getText().equals("Stop")) {
                 startStopButt.setText("Restart");
-                dataRetrieval.interrupt();
+                dataRetriever.interrupt();
             } else {
                 frame.dispose();
-                Home home = new Home();
+                Home home = new Home(); // When restart is pressed the whole app refreshes
             }
         });
 
+        // This pauses display refresh but doesnt pause data retrieval
         setButt.addActionListener(evt->{
-            if(setButt.getText().equals("Pause")) {
+            if (setButt.getText().equals("Pause")) {
                 tempdisplay=display;
                 setButt.setText("Resume");
                 display = 2;
-                dataRetrieval.setDisplay(display);
             } else {
                 setButt.setText("Pause");
                 display = tempdisplay;
-                dataRetrieval.setDisplay(display);
             }
-        });
-
-        Log finalLog = log;
-        confirmButt.addActionListener(evt->{
-            try{
-                finalLog.addPoint(iso.getText(), sidePanel.getAverage(), sidePanel.getCurrent());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            dataRetriever.setDisplay(display);
         });
 
     }
 
-    private GridBagConstraints gridConstraints(int x, int y, int width, int height, double wx, double wy, int fill, int anchor){
+    // Quicker way of defining gridbag constraints
+    private GridBagConstraints gridConstraints(int x, int y, int width, int height, double wx, double wy, int anchor){
         GridBagConstraints c = new GridBagConstraints();
         c.gridx=x;
         c.gridy=y;
@@ -142,25 +105,9 @@ public class Home {
         c.gridheight=height;
         c.weightx=wx;
         c.weighty=wy;
-        c.fill=fill;
+        c.fill= GridBagConstraints.HORIZONTAL;
         c.anchor=anchor;
         return c;
-    }
-
-    public static void arduino() throws InterruptedException, IOException {
-        for (SerialPort s : SerialPort.getCommPorts()) //iterate through all the ports
-        {
-            String PortName = s.getSystemPortName();
-            if(PortName.length() > 12) {
-                if(PortName.substring(0, 12).equals("tty.usbmodem")){
-                    System.out.println("Found port :)");
-                    sp = s;
-                    sp.setComPortParameters(9600, 8, 1, 0);
-                    sp.openPort();
-                    break;
-                }
-            }
-        }
     }
 
 }

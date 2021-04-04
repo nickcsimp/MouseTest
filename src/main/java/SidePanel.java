@@ -2,11 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SidePanel extends JPanel {
-    private int Average;
-    private int Current;
+
+    private int average;
+    private int current;
     private int filterLength=10;
-    JLabel average;
-    JLabel current;
+    JLabel averageLabel;
+    JLabel currentLabel;
 
     public SidePanel(){
         setLayout(new GridBagLayout());
@@ -16,36 +17,39 @@ public class SidePanel extends JPanel {
         c.gridheight=1;
         c.gridy=0;
 
-//        Font font = new Font("Verdana", Font.BOLD, 24);
+        // Font font = new Font("Verdana", Font.BOLD, 24);
+        // Automatically has the words but obvs no data is there yet
         Font font = new Font(null, Font.PLAIN, 30);
-        average = new JLabel("Average BPM: ");
-        current = new JLabel("Current BPM: ");
-        average.setFont(font);
-        current.setFont(font);
-        this.add(average, c);
+        averageLabel = new JLabel("Average BPM: ");
+        currentLabel = new JLabel("Current BPM: ");
+        averageLabel.setFont(font);
+        currentLabel.setFont(font);
+        this.add(averageLabel, c);
         c.gridy=1;
-        this.add(current, c);
+        this.add(currentLabel, c);
     }
+
+    // Updates the words with the correct data
     public void updatePanel(){
-        average.setText("Average BPM: "+Average);
-        current.setText("Current BPM: "+Current);
+        averageLabel.setText("Average BPM: "+ average);
+        currentLabel.setText("Current BPM: "+ current);
         revalidate();
         repaint();
     }
 
-    public void setAverage(int ave){
-        Average=ave;
+    // Data retrieval calculates and update the average and the current
+    public void setAverageLabel(int ave){
+        average =ave;
         updatePanel();
     }
-    public void setCurrent(int cur){
-        Current =cur;
+
+    public void setCurrentLabel(int cur){
+        current =cur;
         updatePanel();
     }
+
     public int getFilterLength(){
         return filterLength;
     }
-
-    public int getAverage(){ return this.Average; }
-
-    public int getCurrent(){ return this.Current; }
+    public void setFilterLength(int filterLength) { this.filterLength = filterLength; }
 }
