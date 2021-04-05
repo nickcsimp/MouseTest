@@ -1,7 +1,5 @@
 import com.fazecast.jSerialComm.SerialPort;
 import javax.swing.*;
-import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
