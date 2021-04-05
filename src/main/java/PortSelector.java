@@ -1,5 +1,6 @@
 import com.fazecast.jSerialComm.SerialPort;
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,23 +23,27 @@ public class PortSelector {
     }
 
     public void selectInput() {
-        int choice = -1;
-        while (choice == -1) {
+        String choice = "";
+        while (choice.equals("")) {
             String message = "Please select the USB port to which the Arduino is connected";
             ArrayList<SerialPort> availablePorts = new ArrayList<>(Arrays.asList(SerialPort.getCommPorts()));
-            ArrayList<String> options = new ArrayList<>();
-            for (SerialPort p: availablePorts) {
-                options.add(p.getSystemPortName());
-            }
-            choice = JOptionPane.showOptionDialog(parent, message, "Choose port", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options.toArray(), options.get(0));
-            if (choice != -1) {
-                SerialPort selectedPort = availablePorts.get(choice);
-                try {
-                    openPort(selectedPort);
-                    dataRetriever.setSerialPort(selectedPort);
-                } catch (Exception e) {
-                    choice = -1;
+            if (availablePorts.size() > 0) {
+                ArrayList<String> options = new ArrayList<>();
+                for (SerialPort p: availablePorts) {
+                    options.add(p.getSystemPortName());
                 }
+                choice = (String) JOptionPane.showInputDialog(parent, message, "Choose port", JOptionPane.QUESTION_MESSAGE, null, options.toArray(), options.get(0));
+                if (!choice.equals("")) {
+                    SerialPort selectedPort = availablePorts.get(options.indexOf(choice));
+                    try {
+                        openPort(selectedPort);
+                        dataRetriever.setSerialPort(selectedPort);
+                    } catch (Exception e) {
+                        choice = "";
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(parent, "There are no input devices connected, please plug in the Arduino");
             }
         }
     }
