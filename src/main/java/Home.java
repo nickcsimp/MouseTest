@@ -1,3 +1,5 @@
+import com.fazecast.jSerialComm.SerialPort;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -5,12 +7,10 @@ import java.util.ArrayList;
 public class Home {
 
     ArrayList<Integer> data;
-    ArrayList<Integer> processedData;
-    double[] FTdata;
     int display;
     int tempdisplay;
 
-    private final DataRetriever dataRetriever;
+    private DataRetriever dataRetriever;
 
     public Home(){
 
@@ -27,8 +27,6 @@ public class Home {
         frame.setVisible(true);
 
         data = new ArrayList<>();// Raw data contained here
-        processedData = new ArrayList<>(); // Processed data here
-        FTdata=new double[40];// TODO Unsure if needed still
 
         // Sets gridbag constraints for various panels
         GridBagConstraints pauseSettings = gridConstraints(6,9,2,3,0.25,0.1, GridBagConstraints.NORTHEAST);
@@ -42,7 +40,7 @@ public class Home {
         SidePanel sidePanel = new SidePanel();
 
         // Instantiates the graph
-        RawGraph procGraph = new RawGraph(processedData, "Mouse Respiratory Rate", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers(), 1);
+        RawGraph rawGraph = new RawGraph(data, "Mouse Respiratory Rate", "Breaths per Minute", "Time (s)", homeControls.getLocalised(), homeControls.getTimeLimit(), homeControls.getOutliers(), GlobalSettings.INSTANCE.getSamplingFrequency());
 
         // Creates start stop pause buttons
         JButton setButt = new JButton("Pause");
@@ -50,13 +48,13 @@ public class Home {
 
         // Adds everything to frame
         frame.add(setButt, pauseSettings);
-        frame.add(procGraph, graphSettings);
+        frame.add(rawGraph, graphSettings);
         frame.add(homeControls, controlsSettings);
         frame.add(sidePanel, rightPanelC);
         JButton loading = new JButton("Finding Arduino...");
         frame.add(loading, startSettings);
 
-        dataRetriever = new DataRetriever(data, null, homeControls, frame, procGraph, graphSettings, display, sidePanel);
+        dataRetriever = new DataRetriever(data, null, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
         PortSelector portSelector = new PortSelector(frame, dataRetriever);
         portSelector.selectInput();
 
@@ -76,8 +74,14 @@ public class Home {
                 startStopButt.setText("Restart");
                 dataRetriever.interrupt();
             } else {
-                frame.dispose();
-                Home home = new Home(); // When restart is pressed the whole app refreshes
+                data = new ArrayList<>();
+                SerialPort sp = dataRetriever.getSerialPort();
+                dataRetriever.remove();
+                dataRetriever = new DataRetriever(data, sp, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
+                dataRetriever.updateGraph();
+                startStopButt.setText("Start");
+                frame.revalidate(); // Repaint so that things show up
+                frame.repaint();
             }
         });
 

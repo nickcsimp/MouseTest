@@ -95,7 +95,6 @@ public class DataRetriever extends Thread {
         while (bis.ready())
         {
             inputLine=Integer.parseInt(bis.readLine());
-            System.out.println(inputLine);
         }
         return inputLine;
     }
@@ -109,9 +108,13 @@ public class DataRetriever extends Thread {
         frame.repaint();
     }
 
-    // Removes graph - not sure if ever needed
+    // Removes graph
     public void remove(){
         frame.remove(rawGraph);
+    }
+
+    public void show(){
+        frame.add(rawGraph, c);
     }
 
     // Used if FT needed - gets the necessary number of data points and can be put into FT calculation
