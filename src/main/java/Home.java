@@ -51,14 +51,11 @@ public class Home {
         frame.add(rawGraph, graphSettings);
         frame.add(homeControls, controlsSettings);
         frame.add(sidePanel, rightPanelC);
-        JButton loading = new JButton("Finding Arduino...");
-        frame.add(loading, startSettings);
 
         dataRetriever = new DataRetriever(data, null, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
         PortSelector portSelector = new PortSelector(frame, dataRetriever);
         portSelector.selectInput();
 
-        frame.remove(loading); // When one is found we remove the loading sign
         frame.add(startStopButt, startSettings); // Add the buttons
         frame.revalidate(); // Repaint so that things show up
         frame.repaint();
@@ -74,14 +71,16 @@ public class Home {
                 startStopButt.setText("Restart");
                 dataRetriever.interrupt();
             } else {
-                data = new ArrayList<>();
-                SerialPort sp = dataRetriever.getSerialPort();
-                dataRetriever.remove();
-                dataRetriever = new DataRetriever(data, sp, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
-                dataRetriever.updateGraph();
-                startStopButt.setText("Start");
-                frame.revalidate(); // Repaint so that things show up
-                frame.repaint();
+                if(AreYouSure()){
+                    data = new ArrayList<>();
+                    SerialPort sp = dataRetriever.getSerialPort();
+                    dataRetriever.remove();
+                    dataRetriever = new DataRetriever(data, sp, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
+                    dataRetriever.updateGraph();
+                    startStopButt.setText("Start");
+                    frame.revalidate(); // Repaint so that things show up
+                    frame.repaint();
+                }
             }
         });
 
@@ -114,4 +113,12 @@ public class Home {
         return c;
     }
 
+    private boolean AreYouSure(){
+        JFrame f = new JFrame();
+        int a=JOptionPane.showConfirmDialog(f,"Are you sure?");
+        if(a==JOptionPane.YES_OPTION){
+            return true;
+        }
+        return false;
+    }
 }
