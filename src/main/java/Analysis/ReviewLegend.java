@@ -2,19 +2,25 @@ package Analysis;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 public class ReviewLegend extends JPanel {
     private int numberOfLines;
+    private ArrayList<String> names;
     public ReviewLegend(ReviewGraph graph){
         this.setLayout(new GridBagLayout());
         this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
         this.setLayout(new GridBagLayout());
+        names = new ArrayList<>();
         Color[] colors=graph.getColors();
         ArrayList<int[]> outliers = graph.getOutliers();
         numberOfLines=colors.length;
         for(int i=0; i<numberOfLines; i++){
-            JLabel name = new JLabel(String.valueOf(i+1));
+            names.add("Dataset "+i);
+            JLabel name = new JLabel(names.get(i));
+            name.addMouseListener(new ChangeName(i, name));
             LegendLine line = new LegendLine(colors[i]);
             JLabel outLabel = new JLabel("Outliers - ");
             JLabel minLabel = new JLabel("Min:");
@@ -79,5 +85,36 @@ public class ReviewLegend extends JPanel {
         c.weighty=wy;
         c.fill= GridBagConstraints.HORIZONTAL;
         return c;
+    }
+
+    public class ChangeName implements MouseListener {
+        int index;
+        JLabel lab;
+        public ChangeName(int i, JLabel name){
+            index = i;
+            lab = name;
+        }
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            JTextField text = new JFormattedTextField(names.get(index));
+            add(text);
+            text.addActionListener(evt->{
+                if(text.getText().equals("")) {
+                    names.set(index, "Dataset "+index);
+                }
+                else {names.set(index, text.getText());}
+                lab.setText(names.get(index));
+                remove(text);
+                repaint();
+            });
+        }
+        @Override
+        public void mousePressed(MouseEvent e) {}
+        @Override
+        public void mouseReleased(MouseEvent e) {}
+        @Override
+        public void mouseEntered(MouseEvent e) {}
+        @Override
+        public void mouseExited(MouseEvent e) {}
     }
 }
