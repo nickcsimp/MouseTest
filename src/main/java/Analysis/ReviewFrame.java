@@ -28,19 +28,19 @@ public class ReviewFrame extends JFrame {
 
         controls = new ReviewControls();
 
-        ArrayList<Float> time = new ArrayList<>();
-        ArrayList<Float> BR = new ArrayList<>();
-        ArrayList<Float> HR = new ArrayList<>();
+        ArrayList<Double> time = new ArrayList<>();
+        ArrayList<Double> BR = new ArrayList<>();
+        ArrayList<Double> HR = new ArrayList<>();
         Random rand = new Random();
         for(int i=0; i<=100; i++){
-            time.add((float) i);
-            BR.add(rand.nextFloat()*100);
-            HR.add(rand.nextFloat()*10+50);
+            time.add((double) i);
+            BR.add((double) (rand.nextFloat()*100));
+            HR.add((double) (rand.nextFloat()*10+50));
         }
-        ArrayList<ArrayList<Float>> input = new ArrayList<>();
+        ArrayList<ArrayList<Double>> input = new ArrayList<>();
         input.add(BR);
         input.add(time);
-        ArrayList<ArrayList<Float>> inputTwo = new ArrayList<>();
+        ArrayList<ArrayList<Double>> inputTwo = new ArrayList<>();
         inputTwo.add(HR);
         inputTwo.add(time);
         graph = new ReviewGraph(controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers(), controls.getTitle(), controls.getXLabel(), controls.getYLabel(), input, inputTwo);
@@ -55,5 +55,9 @@ public class ReviewFrame extends JFrame {
         c.weightx = 1;
         c.weighty=0.5;
         add(controls, c);
+
+        pack();
+        revalidate();
+        repaint();
     }
 }

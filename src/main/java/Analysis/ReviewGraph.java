@@ -12,26 +12,26 @@ public class ReviewGraph extends JPanel {
     private static class SETTINGS {
         private static final int BORDER_GAP = 80;
         private static final int TICK_SIZE = 6;
-        private static final int PREF_W = 600;
-        private static final int PREF_H = 600;
+        private static final int PREF_W = 1200;
+        private static final int PREF_H = 700;
     }
 
-    private final ArrayList<ArrayList<ArrayList<Float>>> data;
+    private final ArrayList<ArrayList<ArrayList<Double>>> data;
     private String title;
     private String xLabel;
     private String yLabel;
     private boolean localised;
     private int[] timeLimit;
     private int[] outliers;
-    private float xscale;
-    private float yscale;
+    private double xscale;
+    private double yscale;
     private int graphHeight;
     private int graphWidth;
     private int[] yLimit;
 
-    public ReviewGraph(boolean localised, int[] timeLimit, int[] outLimits, String title, String xLabel, String yLabel, ArrayList<ArrayList<Float>>... data){
+    public ReviewGraph(boolean localised, int[] timeLimit, int[] outLimits, String title, String xLabel, String yLabel, ArrayList<ArrayList<Double>>... data){
         this.data = new ArrayList<>();
-        for(ArrayList<ArrayList<Float>> dat:data){
+        for(ArrayList<ArrayList<Double>> dat:data){
             this.data.add(dat);
         }
         this.title = title;
@@ -120,7 +120,7 @@ public class ReviewGraph extends JPanel {
 
     private int[] minMaxYValue(){
         int[] output = {1000, 0}; // TODO: shouldn't be 10000
-        for(ArrayList<ArrayList<Float>> dat:data){
+        for(ArrayList<ArrayList<Double>> dat:data){
             for(int i=0; i<dat.get(1).size(); i++) {
                 if(dat.get(1).get(i)>timeLimit[1]){
                     break;
@@ -136,15 +136,15 @@ public class ReviewGraph extends JPanel {
 
     private List<List<Point>> getPoints(){
         List<List<Point>> output = new ArrayList<>();
-        for(ArrayList<ArrayList<Float>> dat:data){
+        for(ArrayList<ArrayList<Double>> dat:data){
             List<Point> points = new ArrayList<>();
             for(int i=0; i<dat.get(1).size(); i++) {
                 if(dat.get(1).get(i)>timeLimit[1]){
                     break;
                 }
                 if(dat.get(1).get(i)>=timeLimit[0]){
-                    float x = SETTINGS.BORDER_GAP+(dat.get(1).get(i)-timeLimit[0])*xscale;
-                    float y = SETTINGS.BORDER_GAP+graphHeight-(dat.get(0).get(i)-yLimit[0])*yscale;
+                    double x = SETTINGS.BORDER_GAP+((dat.get(1).get(i)-timeLimit[0])*xscale)/100;
+                    double y = SETTINGS.BORDER_GAP+graphHeight-((dat.get(0).get(i)-yLimit[0])*yscale)/100;
                     points.add(new Point((int)x,(int)y));
                 }
             }
@@ -161,19 +161,18 @@ public class ReviewGraph extends JPanel {
         g2.setColor(new Color(95, 95, 95));
         g3.setColor(new Color(0,0,0));
 
-        int xdiv = graphWidth/10;
-        int ydiv = graphHeight/10; // TODO: algorithm for best position of grid (such that grid is integers)
+        double xdiv = graphWidth/10;
+        System.out.println("xdiv " + xdiv);
+        double ydiv = graphHeight/10; // TODO: algorithm for best position of grid (such that grid is integers)
 
-        float xdivVal = (timeLimit[1]-timeLimit[0])/10;// TODO: changing hatch number?
-        float ydivVal = (yLimit[1]-yLimit[0])/10;
+        double xdivVal = (timeLimit[1]-timeLimit[0])/10;// TODO: changing hatch number?
+        double ydivVal = (yLimit[1]-yLimit[0])/10;
 
         for(int i=0; i<11; i++){
-            int yticky=originy-i*ydiv;
-            int xtickx=originx+i*xdiv;
-            g2.drawLine(originx-SETTINGS.TICK_SIZE,yticky,xaxisMaxx,yticky);// Draw horizontal lines
-            g2.drawLine(xtickx,originy+SETTINGS.TICK_SIZE,xtickx,yaxisMaxy);// Draw vertical lines
-            g3.drawString(String.valueOf(timeLimit[0]+i*xdivVal), xtickx-10, originy+20);// Write x tick values
-            g3.drawString(String.valueOf(yLimit[0]+i*ydivVal), originx-60, yticky+5);// Write y tick values
+            g2.drawLine(originx-SETTINGS.TICK_SIZE,SETTINGS.BORDER_GAP+graphHeight*i/10,xaxisMaxx,SETTINGS.BORDER_GAP+graphHeight*i/10);// Draw horizontal lines
+            g2.drawLine(SETTINGS.BORDER_GAP+graphWidth*i/10,originy+SETTINGS.TICK_SIZE,SETTINGS.BORDER_GAP+graphWidth*i/10,yaxisMaxy);// Draw vertical lines
+            g3.drawString(String.valueOf(timeLimit[0]+i*xdivVal), SETTINGS.BORDER_GAP+graphWidth*i/10-10, originy+20);// Write x tick values
+            g3.drawString(String.valueOf(yLimit[0]+i*ydivVal), originx-60, SETTINGS.BORDER_GAP+graphHeight*i/10+5);// Write y tick values
         }
     }
 
@@ -220,8 +219,11 @@ public class ReviewGraph extends JPanel {
     private void settings(){
         graphHeight=getHeight()-2*SETTINGS.BORDER_GAP;
         graphWidth=getWidth()-2*SETTINGS.BORDER_GAP;
-        xscale = graphWidth/(timeLimit[1]-timeLimit[0]);
-        yscale = graphHeight/(yLimit[1]-yLimit[0]);
+        xscale = 100*graphWidth/(timeLimit[1]-timeLimit[0]);
+        yscale = 100*graphHeight/(yLimit[1]-yLimit[0]);
+        System.out.println("xscale:" + xscale/100);
+        System.out.println("Time: " + (timeLimit[1]-timeLimit[0]));
+        System.out.println("graphWidth: " + graphWidth);
     }
 
 
