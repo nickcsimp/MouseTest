@@ -2,13 +2,11 @@ package Analysis;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class ReviewFrame extends JFrame {
-    ReviewGraph graph;
-    ReviewControls controls;
+
     public ReviewFrame(){
         this.setExtendedState(Frame.MAXIMIZED_BOTH);
         this.setLayout(new GridBagLayout());
@@ -17,17 +15,9 @@ public class ReviewFrame extends JFrame {
         this.setLocationByPlatform(true);
         this.setVisible(true);
         GridBagConstraints c = new GridBagConstraints();
-        c.gridy = 0;
-        c.gridx = 0;
-        c.anchor = GridBagConstraints.NORTH;
-        c.weightx = 1;
-        c.weighty=0.5;
-        c.gridheight=1;
-        c.gridwidth=1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-
-        controls = new ReviewControls();
-
+        GridBagConstraints graphC = gridConstraints(0, 0, 8, 8, 0.8, 0.8, GridBagConstraints.HORIZONTAL, GridBagConstraints.NORTH);
+        GridBagConstraints controlsC = gridConstraints(0, 8, 8, 2, 0.8, 0.2, GridBagConstraints.NONE, GridBagConstraints.SOUTH);
+        GridBagConstraints legendC = gridConstraints(9, 0, 2, 10, 0.8, 1, GridBagConstraints.NONE, GridBagConstraints.EAST);
         ArrayList<Double> time = new ArrayList<>();
         ArrayList<Double> BR = new ArrayList<>();
         ArrayList<Double> HR = new ArrayList<>();
@@ -43,21 +33,32 @@ public class ReviewFrame extends JFrame {
         ArrayList<ArrayList<Double>> inputTwo = new ArrayList<>();
         inputTwo.add(HR);
         inputTwo.add(time);
-        graph = new ReviewGraph(controls.getLocalised(), controls.getTimeLimit(), controls.getOutliers(), controls.getTitle(), controls.getXLabel(), controls.getYLabel(), input, inputTwo);
+        ReviewGraph graph = new ReviewGraph(input, inputTwo);
+        ReviewControls controls = new ReviewControls(graph);
+        ReviewLegend legend = new ReviewLegend(graph);
 
-        add(graph, c);
-        c.gridy = 1;
-        c.gridheight=1;
-        c.gridwidth=1;
-        c.gridx = 0;
-        c.anchor = GridBagConstraints.SOUTH;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 1;
-        c.weighty=0.5;
-        add(controls, c);
+        add(legend, legendC);
+        add(graph, graphC);
+        add(controls, controlsC);
 
         pack();
         revalidate();
         repaint();
+    }
+
+
+    // Quicker way of defining gridbag constraints
+    //TODO copied from home
+    private GridBagConstraints gridConstraints(int x, int y, int width, int height, double wx, double wy, int fill, int anchor){
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx=x;
+        c.gridy=y;
+        c.gridwidth=width;
+        c.gridheight=height;
+        c.weightx=wx;
+        c.weighty=wy;
+        c.fill = fill;
+        c.anchor=anchor;
+        return c;
     }
 }
