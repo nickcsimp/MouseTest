@@ -6,12 +6,8 @@ import java.util.Arrays;
 public class PortSelector {
 
     JFrame parent;
-    DataRetriever dataRetriever;
 
-    // Initialise PortSelector with a DataRetriever object
-    // Once a selection is made, the serial port is set on the DataRetriever
-    public PortSelector(JFrame parent, DataRetriever dataRetriever) {
-        this.dataRetriever = dataRetriever;
+    public PortSelector(JFrame parent) {
         this.parent = parent;
     }
 
@@ -20,9 +16,9 @@ public class PortSelector {
         port.openPort();
     }
 
-    public void selectInput() {
+    public SerialPort selectInput() {
         String choice = "";
-        while (choice.equals("")) {
+        while (true) { // This will loop until a selected port is returned
             String message = "Please select the USB port to which the Arduino is connected";
             ArrayList<SerialPort> availablePorts = new ArrayList<>(Arrays.asList(SerialPort.getCommPorts()));
             if (availablePorts.size() > 0) {
@@ -35,10 +31,8 @@ public class PortSelector {
                     SerialPort selectedPort = availablePorts.get(options.indexOf(choice));
                     try {
                         openPort(selectedPort);
-                        dataRetriever.setSerialPort(selectedPort);
-                    } catch (Exception e) {
-                        choice = "";
-                    }
+                        return selectedPort;
+                    } catch (Exception ignored) { }
                 }
             } else {
                 JOptionPane.showMessageDialog(parent, "There are no input devices connected, please plug in the Arduino");

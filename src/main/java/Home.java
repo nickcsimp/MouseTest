@@ -54,9 +54,9 @@ public class Home {
         JButton loading = new JButton("Finding Arduino...");
         frame.add(loading, startSettings);
 
-        dataRetriever = new DataRetriever(data, null, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
-        PortSelector portSelector = new PortSelector(frame, dataRetriever);
-        portSelector.selectInput();
+        PortSelector portSelector = new PortSelector(frame);
+        SerialPort selectedPort = portSelector.selectInput();
+        dataRetriever = new DataRetriever(data, selectedPort, homeControls, frame, rawGraph, graphSettings, display, sidePanel);
 
         frame.remove(loading); // When one is found we remove the loading sign
         frame.add(startStopButt, startSettings); // Add the buttons

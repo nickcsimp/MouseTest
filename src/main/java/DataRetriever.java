@@ -26,6 +26,7 @@ public class DataRetriever extends Thread {
         this.display = display;
         finished=false;
         this.sidePanel=sidePanel;
+        this.sp.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
     }
 
     public SerialPort getSerialPort() {
