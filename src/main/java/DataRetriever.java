@@ -44,7 +44,7 @@ public class DataRetriever extends Thread {
             int input = 0;
             try {
                 input = getData(); // This reads data from the serial port
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             } catch (NumberFormatException e) {
                 if (data.size() >= 1) { // Need to check that size of data is not 0
@@ -82,22 +82,15 @@ public class DataRetriever extends Thread {
         }
     }
 
-    //Used to pause graph update
+    // Used to pause graph update
     public void setDisplay(int display){
         this.display=display;
     }
 
-    // I got this from https://stackoverflow.com/questions/16608878/read-data-from-a-java-socket
-    private Integer getData() throws IOException {
+    private Integer getData() throws IOException, InterruptedException {
         BufferedReader bis = new BufferedReader(new InputStreamReader(sp.getInputStream()));
-        Integer inputLine=0; // temporally stores the new number from the port
-        sp.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);
-
-        while (bis.ready())
-        {
-            inputLine=Integer.parseInt(bis.readLine());
-        }
-        return inputLine;
+        while (!bis.ready()) { this.wait(); } // Wait until stream can be read
+        return Integer.parseInt(bis.readLine()); // As Arduino code uses println, the data is sent as a string
     }
 
     // Updates graph with new info
