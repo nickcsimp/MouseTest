@@ -68,7 +68,6 @@ public class Home {
             if (started) {
                 started = false;
                 if (dataRetriever == null) { return; }
-                mainFrame.remove(pauseButton);
                 startStopButton.setText(SETTINGS.START_TEXT);
                 this.dataRetriever.cancel(true);
                 hidePauseButton();
