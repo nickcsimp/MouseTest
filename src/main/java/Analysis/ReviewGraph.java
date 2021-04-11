@@ -9,7 +9,8 @@ import java.util.Random;
 public class ReviewGraph extends JPanel {
 
     private static class SETTINGS {
-        private static final int BORDER_GAP = 50;
+        private static final int BORDER_GAP = 40;
+        private static final int TOP_GAP = 5;
         private static final int TICK_SIZE = 6;
         private static final int PREF_W = 1100;
         private static final int PREF_H = 600;
@@ -161,7 +162,7 @@ public class ReviewGraph extends JPanel {
                 }
                 if(dat.get(1).get(i)>=timeLimit[0]){
                     double x = SETTINGS.BORDER_GAP+((dat.get(1).get(i)-timeLimit[0])*xscale)/100;
-                    double y = SETTINGS.BORDER_GAP+graphHeight-((dat.get(0).get(i)-yLimit[0])*yscale)/100;
+                    double y = SETTINGS.TOP_GAP+graphHeight-((dat.get(0).get(i)-yLimit[0])*yscale)/100;
                     points.add(new Point((int)x,(int)y));
                     if(dat.get(0).get(i)>outlimits.get(count)[1] || dat.get(0).get(i)<outlimits.get(count)[0]){
                         liers.add(true);
@@ -181,8 +182,8 @@ public class ReviewGraph extends JPanel {
     private void drawAxes(Graphics2D g2, Graphics g3){
         double numberOfHatches=10; // TODO: algorithm for best position of grid (such that grid is integers)
         int originx = SETTINGS.BORDER_GAP;
-        int originy = SETTINGS.BORDER_GAP+graphHeight;
-        int yaxisMaxy = SETTINGS.BORDER_GAP;
+        int originy = SETTINGS.TOP_GAP+graphHeight;
+        int yaxisMaxy = SETTINGS.TOP_GAP;
         int xaxisMaxx = SETTINGS.BORDER_GAP+graphWidth;
         g2.setColor(new Color(95, 95, 95));
         g3.setColor(new Color(0,0,0));
@@ -192,7 +193,7 @@ public class ReviewGraph extends JPanel {
 
         for(int i=0; i<11; i++){
             int xtick = (int) (SETTINGS.BORDER_GAP+graphWidth*i/numberOfHatches);
-            int ytick = (int) (SETTINGS.BORDER_GAP+graphHeight*i/numberOfHatches);
+            int ytick = (int) (SETTINGS.TOP_GAP+graphHeight*i/numberOfHatches);
             g2.drawLine(originx-SETTINGS.TICK_SIZE,ytick,xaxisMaxx,ytick);// Draw horizontal lines
             g2.drawLine(xtick,originy+SETTINGS.TICK_SIZE,xtick,yaxisMaxy);// Draw vertical lines
             g3.drawString(String.valueOf(timeLimit[0]+i*xdivVal), xtick-10, originy+20);// Write x tick values
@@ -201,7 +202,7 @@ public class ReviewGraph extends JPanel {
     }
 
     private void settings(){
-        graphHeight=getHeight()-2*SETTINGS.BORDER_GAP;
+        graphHeight=getHeight()-SETTINGS.BORDER_GAP-SETTINGS.TOP_GAP;
         graphWidth=getWidth()-2*SETTINGS.BORDER_GAP;
         xscale = 100*graphWidth/(timeLimit[1]-timeLimit[0]);
         yscale = 100*graphHeight/(yLimit[1]-yLimit[0]);
