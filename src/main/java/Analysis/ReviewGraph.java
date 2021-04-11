@@ -2,10 +2,6 @@ package Analysis;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,17 +9,14 @@ import java.util.Random;
 public class ReviewGraph extends JPanel {
 
     private static class SETTINGS {
-        private static final int BORDER_GAP = 100;
+        private static final int BORDER_GAP = 50;
         private static final int TICK_SIZE = 6;
-        private static final int PREF_W = 1200;
-        private static final int PREF_H = 700;
+        private static final int PREF_W = 1100;
+        private static final int PREF_H = 600;
         private static final int GRAPH_POINT_WIDTH = 8;
     }
 
     private final ArrayList<ArrayList<ArrayList<Double>>> data;
-    private String title;
-    private String xLabel;
-    private String yLabel;
     private boolean localised;
     private int[] timeLimit;
     private double xscale;
@@ -34,9 +27,6 @@ public class ReviewGraph extends JPanel {
     private Color[] colors;
     private ArrayList<int[]> outlimits;
     private ArrayList<ArrayList<Boolean>> outliers;
-    private JLabel tit;
-    private JLabel xlabel;
-    private JPanel ylabel;
 
     public ReviewGraph(ArrayList<ArrayList<Double>>... data){
         Random rand = new Random();
@@ -53,21 +43,8 @@ public class ReviewGraph extends JPanel {
         for(int i=0; i<count; i++){
             colors[i] = new Color(rand.nextFloat(),rand.nextFloat(),rand.nextFloat()); //TODO: put this all in one loop
         }
-        this.title = "title";
-        this.xLabel = "xLabel";
-        this.yLabel = "yLabel";
         this.localised = true;
         this.timeLimit = new int[]{0, 10};
-        tit = new JLabel(title);
-        xlabel = new JLabel(xLabel);
-        ylabel = new JPanel();
-        ylabel.setOpaque(false);
-        add(tit);
-        add(xlabel);
-        add(ylabel);
-        tit.addMouseListener(new ChangeTitle());
-        xlabel.addMouseListener(new ChangeX());
-        ylabel.addMouseListener(new ChangeY());
     }
 
     @Override
@@ -97,7 +74,6 @@ public class ReviewGraph extends JPanel {
         List<List<Point>> graphPoints = getPoints();
 
         drawAxes(g2, g3);
-        writeTitles(g2);
         g2.setStroke(new BasicStroke(3f));
         int count=0;
         for(List<Point> points: graphPoints) {
@@ -166,7 +142,7 @@ public class ReviewGraph extends JPanel {
                 }
             }
             if(!localised){
-                //output[0]=0;
+                output[0]=0;
             }
         }
         return output;
@@ -179,7 +155,6 @@ public class ReviewGraph extends JPanel {
         for(ArrayList<ArrayList<Double>> dat:data){
             List<Point> points = new ArrayList<>();
             ArrayList<Boolean> liers = new ArrayList<>();
-            //Boolean[] liers = new Boolean[timeLimit[1]-timeLimit[0]];
             for(int i=0; i<dat.get(1).size(); i++) {
                 if(dat.get(1).get(i)>timeLimit[1]){
                     break;
@@ -225,49 +200,6 @@ public class ReviewGraph extends JPanel {
         }
     }
 
-    private void writeTitles(Graphics2D g2){
-
-        g2.setColor(new Color(0, 0, 0));
-
-        // Transformation that rotates text
-        AffineTransform affineTransform = new AffineTransform();
-        affineTransform.rotate(Math.toRadians(-90), 0, 0);
-
-        // Fonts for the titles
-        Font titleFont = new Font(null, Font.PLAIN, 30);
-        Font xFont = new Font(null, Font.PLAIN, 20);
-        Font yFont = xFont.deriveFont(affineTransform);
-
-        // Sizes of the fonts
-        FontMetrics titMet = g2.getFontMetrics(titleFont);
-        FontMetrics xMet = g2.getFontMetrics(xFont);
-        FontMetrics yMet = g2.getFontMetrics(yFont);
-
-        // Size of the text
-        int titleWidth = titMet.stringWidth(title);
-        int xWidth = xMet.stringWidth(xLabel);
-        int xHeight = xMet.getHeight();
-
-        // Positions of the Titles
-        int titX = (getWidth()-titleWidth)/2;
-        int titY = SETTINGS.BORDER_GAP/2;
-        int xX = (getWidth()-xWidth)/2;
-        int xY = getHeight()-SETTINGS.BORDER_GAP/2;
-        int yX = SETTINGS.BORDER_GAP/2;
-        int yY = (getHeight()+xWidth)/2;
-
-        tit.setFont(titleFont);
-        xlabel.setFont(xFont);
-
-        tit.setLocation(titX, titY);
-        xlabel.setLocation(xX, xY);
-
-        ylabel.setLocation(yX-xHeight, yY-xWidth);
-        ylabel.setPreferredSize(new Dimension(xHeight, xWidth));
-        g2.setFont(yFont);
-        g2.drawString(yLabel, yX, yY);
-    }
-
     private void settings(){
         graphHeight=getHeight()-2*SETTINGS.BORDER_GAP;
         graphWidth=getWidth()-2*SETTINGS.BORDER_GAP;
@@ -275,82 +207,4 @@ public class ReviewGraph extends JPanel {
         yscale = 100*graphHeight/(yLimit[1]-yLimit[0]);
     }
 
-    public class ChangeTitle implements MouseListener {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            Point point = tit.getLocation();
-            JTextField text = new JFormattedTextField(tit.getText());
-            add(text);
-            text.setLocation(point);
-            System.out.println(text.getLocation());
-            text.addActionListener(evt->{
-                if(text.getText().equals("")) {
-                    tit.setText("Title");
-                }
-                else {tit.setText(text.getText());}
-                remove(text);
-                repaint();
-            });
-        }
-        @Override
-        public void mousePressed(MouseEvent e) {}
-        @Override
-        public void mouseReleased(MouseEvent e) {}
-        @Override
-        public void mouseEntered(MouseEvent e) {}
-        @Override
-        public void mouseExited(MouseEvent e) {}
-    }
-
-    public class ChangeY implements MouseListener {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            Point point = ylabel.getLocation();
-            JTextField text = new JFormattedTextField(yLabel);
-            add(text);
-            text.setLocation(point);
-            text.addActionListener(evt->{
-                if(text.getText().equals("")){
-                    yLabel="yLabel";
-                }
-                else {yLabel=text.getText();}
-                remove(text);
-                repaint();
-            });
-        }
-        @Override
-        public void mousePressed(MouseEvent e) {}
-        @Override
-        public void mouseReleased(MouseEvent e) {}
-        @Override
-        public void mouseEntered(MouseEvent e) {}
-        @Override
-        public void mouseExited(MouseEvent e) {}
-    }
-
-    public class ChangeX implements MouseListener {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            Point point = xlabel.getLocation();
-            JTextField text = new JFormattedTextField(xlabel.getText());
-            text.setLocation(point);
-            add(text);
-            text.addActionListener(evt->{
-                if(text.getText().equals("")){
-                    xlabel.setText("xLabel");
-                }
-                else {xlabel.setText(text.getText());}
-                remove(text);
-                repaint();
-            });
-        }
-        @Override
-        public void mousePressed(MouseEvent e) {}
-        @Override
-        public void mouseReleased(MouseEvent e) {}
-        @Override
-        public void mouseEntered(MouseEvent e) {}
-        @Override
-        public void mouseExited(MouseEvent e) {}
-    }
 }

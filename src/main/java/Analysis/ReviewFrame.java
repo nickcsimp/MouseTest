@@ -34,11 +34,12 @@ public class ReviewFrame extends JFrame {
         inputTwo.add(HR);
         inputTwo.add(time);
         ReviewGraph graph = new ReviewGraph(input, inputTwo);
+        ReviewPanel panel = new ReviewPanel(graph);
         ReviewControls controls = new ReviewControls(graph);
         ReviewLegend legend = new ReviewLegend(graph);
 
         add(legend, legendC);
-        add(graph, graphC);
+        add(panel, graphC);
         add(controls, controlsC);
 
         pack();

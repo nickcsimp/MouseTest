@@ -71,6 +71,9 @@ public class ReviewLegend extends JPanel {
             add(line, lineC);
             add(outLabel, outLabC);
         }
+        this.revalidate();
+        this.repaint();
+        graph.revalidate();
         graph.repaint();
     }
 
