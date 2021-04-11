@@ -1,31 +1,61 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.io.FileWriter;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class Log {
+public class Log extends Thread{
+    boolean finished;
+    PrintWriter log;
+    SidePanel sidePanel;
+    Integer iso; // isoflurane concentration
 
-    File log;
-
-    public Log() throws InterruptedException, IOException {
+    public Log(SidePanel sidePanel) throws InterruptedException, IOException {
+        this.sidePanel = sidePanel;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM");
-        log = new File(System.getProperty("user.dir")+"/Mouse Log" +".txt");
-        if(log.createNewFile()) {
-            System.out.println("File created: " + log.getName());
+        log = null;
+        try {
+            log = new PrintWriter(new File("MouseLog.csv"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
 
+        System.out.println("File created");
+        // give category "headings"
+        addPoint("iso", "average", "current");
+
+
+    }
+
+    public void changeIso(Integer isoChange){
+        this.iso = this.iso+isoChange;
     }
 
     //adds a line with the RR at some point in time
-    public void addPoint(String isoChange, int average, int current) throws InterruptedException, IOException{
+    public void addPoint(String iso, String average, String current) throws InterruptedException, IOException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
-        FileWriter myWriter = new FileWriter(log.getName());
-        myWriter.write(LocalDateTime.now().format(dtf)+"\t"+"Change of isoflurane: "+isoChange+"\t"+"Current RR: "+current+"\t"+"Average RR: "+average);
-        myWriter.close();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(LocalDateTime.now().format(dtf) + ",");
+        sb.append(iso + ",");
+        sb.append(average + ",");
+        sb.append(current + ",");
+
+        log.write(sb.toString());
+        log.close();
     }
 
+    public void run(){
+        while(!finished) {
+            try {
+                addPoint(iso.toString(), sidePanel.getCurrent(), sidePanel.getAverage());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

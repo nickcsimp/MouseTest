@@ -3,8 +3,8 @@ import java.awt.*;
 
 public class SidePanel extends JPanel {
 
-    private int average;
-    private int current;
+    private Integer average;
+    private Integer current;
     private int filterLength=10;
     JLabel averageLabel;
     JLabel currentLabel;
@@ -52,4 +52,8 @@ public class SidePanel extends JPanel {
         return filterLength;
     }
     public void setFilterLength(int filterLength) { this.filterLength = filterLength; }
+
+    public String getAverage(){ return average.toString(); }
+
+    public String getCurrent(){ return current.toString();}
 }
