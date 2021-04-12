@@ -1,7 +1,10 @@
+import ui.Home;
+
+import javax.swing.*;
 
 public class Main {
     public static void main(String[] args){
-        Home home = new Home();
+        SwingUtilities.invokeLater(Home::new);
     }
 }
 

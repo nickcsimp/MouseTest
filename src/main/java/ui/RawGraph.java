@@ -1,3 +1,8 @@
+package ui;
+
+import helpers.GlobalSettings;
+import helpers.Helpers;
+
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.text.DecimalFormat;
@@ -23,9 +28,7 @@ public class RawGraph extends JPanel {
         private static final int GRAPH_POINT_WIDTH = 6;
     }
 
-    private final int timeLimit;
-    private final List<Integer> scores;
-    private final boolean localised;
+    private List<Integer> dataPoints;
     private final String title;
     private final String xaxis;
     private final String yaxis;
@@ -37,22 +40,23 @@ public class RawGraph extends JPanel {
     private int yScale;
     private int graphWidth;
     private int graphHeight;
-    int yMin;
-    int yMax;
-    int xMin;
-    int xMax;
-    int[] outliers;
+    private int yMin;
+    private int yMax;
+    private int xMin;
+    private int xMax;
     private boolean[] outlierBool;
 
-    public RawGraph(ArrayList<Integer> data, String title, String yaxis, String xaxis, boolean localised, int timeLimit, int[] outLimits, int samplingFreq) {
+    public RawGraph(List<Integer> data, String title, String yaxis, String xaxis) {
         this.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.black));
-        scores = data;
-        this.localised = localised;
-        this.timeLimit = timeLimit*samplingFreq;
+        this.dataPoints = data;
         this.title = title;
         this.yaxis=yaxis;
         this.xaxis=xaxis;
-        this.outliers = outLimits;
+    }
+
+    public void updateData(List<Integer> data) {
+        this.dataPoints = data;
+        this.repaint();
     }
 
     // This is the bulk
@@ -127,39 +131,17 @@ public class RawGraph extends JPanel {
         return new Dimension(SETTINGS.PREF_W, SETTINGS.PREF_H);
     }
 
-    // Finds the maximum number in the data to set the y axis maximum
-    public int maximum(List<Integer> list, int upper, int lower){
-        Integer output = 0;
-        for(int i=lower; i<=upper; i++) {
-            if (list.get(i) > output) {
-                output = list.get(i);
-            }
-        }
-        return output;
-    }
-
-    // Finds the minimum number in the data to set the y axis minimnum
-    public int minimum(List<Integer> list, int upper, int lower){
-        Integer output = maximum(list, upper, lower); // Uses max as a limit instead of eg. 1000000
-        for(int i=lower; i<=upper; i++){
-            if(list.get(i)<output){
-                output=list.get(i);
-            }
-        }
-        return output;
-    }
-
     // Does some maths on the screen dimensions to find where each point should go on the graph
     private List<Point> getGraphPoints(){
         List<Point> graphPoints = new ArrayList<>();
-        int cutoff = Math.min(maximumX, timeLimit);
+        int cutoff = Math.min(maximumX, GlobalSettings.INSTANCE.getTimeLimitNumSamples());
         for (int i = 0; i <= cutoff; i++) {
             // Highlights points that should be red
-            outlierBool[i]=isOutlier(scores.get(minimumX+i));
+            outlierBool[i]=isOutlier(dataPoints.get(minimumX+i));
             // x values depend on screen size, border size and number of points to plot
             int x1 = ((i * graphWidth / xScale) + SETTINGS.BORDER_GAP);
             // y values depend on screen size, border size and difference between max and min y values
-            int y1 = (graphHeight + SETTINGS.BORDER_GAP) - ((scores.get(minimumX+i)-yMin) * graphHeight) / yScale;
+            int y1 = (graphHeight + SETTINGS.BORDER_GAP) - ((dataPoints.get(minimumX+i)-yMin) * graphHeight) / yScale;
             graphPoints.add(new Point(x1, y1));
         }
         return graphPoints;
@@ -167,30 +149,28 @@ public class RawGraph extends JPanel {
 
     // Determines if a point lies outside of the designated acceptable region
     private boolean isOutlier(int i){
-        return i < outliers[1] || i > outliers[0];
+        return i < GlobalSettings.INSTANCE.getOutlierMin() || i > GlobalSettings.INSTANCE.getOutlierMax();
     }
 
     // This uses the screen dimensions to find where points can be put
     private void setGraphSizes(){
-        maximumX= scores.size()-1; // Number of points that can be plotted
-        minimumX =0; // Assumes a minimum of 0
-        if (maximumX< timeLimit){ // Time limit is the user defined x axis size
+        maximumX = dataPoints.size()-1; // Number of points that can be plotted
+        minimumX = 0; // Assumes a minimum of 0
+        if (maximumX< GlobalSettings.INSTANCE.getTimeLimitNumSamples()){ // Time limit is the user defined x axis size
             xMin = 0; // If we have fewer points than the user designates then we start from the first value in data
             xMax = (((maximumX-1) / 10) + 1) * 10; // This puts the rhs of the x axis at the next 10 seconds
         }
         else {
-            minimumX=maximumX- timeLimit; // Minimum x value leaves only the user defined number of points on the graph
+            minimumX = maximumX - GlobalSettings.INSTANCE.getTimeLimitNumSamples(); // Minimum x value leaves only the user defined number of points on the graph
             xMin = minimumX;
             xMax = maximumX;
         }
-
         xScale = xMax-xMin; // The scale is the difference between the max and the min - used for plotting points
         hatchSizeX = xScale/10; // Hatch is where the lines are drawn on the graph
-
-        int maximumY = maximum(scores, maximumX, minimumX); // Finds the maximum y value
+        int maximumY = Helpers.maximum(dataPoints, maximumX, minimumX); // Finds the maximum y value
         int minimumY = 0; // Assumes a minimum of 0
-        if (localised) {
-            minimumY = minimum(scores, maximumX, minimumX ); // If we are focusing on where the points are then the minimum value is found
+        if (GlobalSettings.INSTANCE.isLocalised()) {
+            minimumY = Helpers.minimum(dataPoints, maximumX, minimumX ); // If we are focusing on where the points are then the minimum value is found
         }
         yMin = (minimumY /10)*10; // Rounds down to nearest integer value
         yMax = ((maximumY /10)+1)*10; // Rounds up to nearest integer
