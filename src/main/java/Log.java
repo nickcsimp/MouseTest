@@ -10,7 +10,7 @@ public class Log extends Thread{
     boolean finished;
     PrintWriter log;
     SidePanel sidePanel;
-    Integer iso; // isoflurane concentration
+    Integer iso = 0; // isoflurane concentration
 
     public Log(SidePanel sidePanel) throws InterruptedException, IOException {
         this.sidePanel = sidePanel;
@@ -35,22 +35,22 @@ public class Log extends Thread{
 
     //adds a line with the RR at some point in time
     public void addPoint(String iso, String average, String current) throws InterruptedException, IOException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
 
         StringBuilder sb = new StringBuilder();
         sb.append(LocalDateTime.now().format(dtf) + ",");
         sb.append(iso + ",");
         sb.append(average + ",");
-        sb.append(current + ",");
+        sb.append(current + ",\n");
 
         log.write(sb.toString());
-        log.close();
     }
 
     public void run(){
         while(!finished) {
             try {
                 addPoint(iso.toString(), sidePanel.getCurrent(), sidePanel.getAverage());
+                System.out.println("Point added");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IOException e) {
